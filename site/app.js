@@ -19,6 +19,7 @@ const tutorGuide = {
   merge_sorted: { question: 'Where can you write the largest remaining value without overwriting an unread value?', principle: 'Filling from the back preserves nums1’s unread values while two pointers choose the larger tail.', hints: ['Point to the last valid value in each input and the last output slot.', 'Write the larger tail into the output slot, then move that input pointer and the output pointer.', 'When nums2 still has values, copy them. If nums1 is exhausted, nums2 must fill the remaining front.'], connections: [['binary_search','Sorted order powers both: one shrinks a search range, the other compares two sorted streams.'],['merge_sort','Merge sort repeatedly uses this same idea of combining sorted halves.']] },
   valid_parentheses: { question: 'When a closing bracket appears, which opening bracket must match it?', principle: 'A stack remembers unmatched openers in last-in, first-out order, which mirrors nested brackets.', hints: ['Opening brackets need to wait until their matching closer appears. What structure naturally remembers the most recent one?', 'A closer fails if the stack is empty or its top is the wrong type.', 'After scanning all characters, what should be true about the stack for the string to be valid?'], connections: [['two_sum','Both use fast lookup, but a stack also preserves order so the newest unmatched opener is checked first.'],['longest_unique_substring','Both track a changing set of relevant characters/state while scanning left to right.']] },
   merge_sort: { question: 'What smaller versions of this problem can you solve, and what is the simplest input that is already sorted?', principle: 'Divide and conquer splits the list, solves smaller pieces, then merges sorted results.', hints: ['A list of zero or one values is already sorted. Use that as your base case.', 'Split into smaller lists and recursively sort each half.', 'Merge the two sorted halves with pointers; take care to include duplicates and leftover values.'] }
+  ,...(window.PATTERNLAB_EXTRA_TUTOR_GUIDE || {})
 };
 function readProgress() {
   try {
@@ -147,6 +148,7 @@ function tutorObservation(slug, code) {
     merge_sorted: [[/\bi\b|\bj\b/,'You have pointer-like state. Because nums1 has spare slots, compare from the ends to avoid overwriting unread values.'],[/while\s+/,'The merge loop is forming. Remember the leftover nums2 case after nums1 runs out.'],[/sort\(|sorted\(/,'The prompt is practicing a linear merge. Try using the existing sorted order instead of sorting everything again.']],
     valid_parentheses: [[/\bstack\b|append\(|\.pop\(/,'A stack matches the nested order. Before popping, handle an empty stack; then compare the popped opener’s expected closer.'],[/\{\s*['"]\(/,'A mapping from opener to closer can make pair checks clear. Make sure the final stack is empty.'],[/for\s+.*\bin\b/,'A left-to-right scan is right. Openers wait; each closer must match the most recent unmatched opener.']],
     merge_sort: [[/return\s+.*nums|len\(.*\)\s*<=?\s*1/,'Check the base case: zero or one item is already sorted, so recursion stops there.'],[/merge|left|right/,'Keep splitting until the base case, then combine two sorted halves while preserving leftovers and duplicates.'],[/sort\(|sorted\(/,'The challenge asks you to build the sorting process yourself. Focus on splitting and merging rather than a built-in sort.']]
+    ,...(window.PATTERNLAB_EXTRA_OBSERVATIONS || {})
   };
   const match = (patterns[slug] || []).find(([regex]) => regex.test(text));
   return match?.[1] || 'Keep going. As you write, name what each variable means and what should be true after every loop step.';
@@ -363,6 +365,72 @@ function generatedCases(challenge) {
       case 'merge_sort': {
         const nums = randomArray(randomInt(0, 40), -100, 100);
         input = {nums}; expected = [...nums].sort((a, b) => a - b); break;
+      }
+      case 'contains_duplicate': {
+        const nums = randomArray(randomInt(0, 18), -8, 8);
+        input = {nums}; expected = new Set(nums).size !== nums.length; break;
+      }
+      case 'valid_anagram': {
+        const alphabet = 'abcde';
+        const s = Array.from({length: randomInt(0, 16)}, () => alphabet[randomInt(0, alphabet.length - 1)]).join('');
+        const t = Math.random() < .5 ? [...s].sort(() => Math.random() - .5).join('') : Array.from({length: randomInt(0, 16)}, () => alphabet[randomInt(0, alphabet.length - 1)]).join('');
+        const sorted = value => [...value].sort().join('');
+        input = {s,t}; expected = sorted(s) === sorted(t); break;
+      }
+      case 'best_time_stock': {
+        const prices = randomArray(randomInt(1, 18), 1, 50); let low = Infinity; let best = 0;
+        for (const price of prices) { low = Math.min(low, price); best = Math.max(best, price - low); }
+        input = {prices}; expected = best; break;
+      }
+      case 'product_except_self': {
+        const nums = randomArray(randomInt(2, 9), -4, 4);
+        input = {nums}; expected = nums.map((_, i) => nums.reduce((product, value, j) => j === i ? product : product * value, 1)); break;
+      }
+      case 'move_zeroes': {
+        const nums = randomArray(randomInt(0, 18), 0, 4);
+        input = {nums}; expected = [...nums.filter(value => value !== 0), ...nums.filter(value => value === 0)]; break;
+      }
+      case 'search_insert': {
+        const nums = [...new Set(randomArray(randomInt(0, 18), -20, 20))].sort((a,b)=>a-b); const target = randomInt(-22,22);
+        input = {nums,target}; expected = nums.findIndex(value=>value>=target); if (expected < 0) expected = nums.length; break;
+      }
+      case 'reverse_list': {
+        const values = randomArray(randomInt(0, 18), -20, 20);
+        input = {values}; expected = [...values].reverse(); break;
+      }
+      case 'merge_two_lists': {
+        const list1 = randomArray(randomInt(0, 12), -20, 20).sort((a,b)=>a-b); const list2 = randomArray(randomInt(0, 12), -20, 20).sort((a,b)=>a-b);
+        input = {list1,list2}; expected = [...list1,...list2].sort((a,b)=>a-b); break;
+      }
+      case 'daily_temperatures': {
+        const temperatures = randomArray(randomInt(1, 20), 30, 100);
+        input = {temperatures}; expected = temperatures.map((value,i)=>{let j=i+1;while(j<temperatures.length&&temperatures[j]<=value)j+=1;return j<temperatures.length?j-i:0;}); break;
+      }
+      case 'number_of_islands': {
+        const rows = randomInt(0, 7), cols = randomInt(0, 7); const grid = Array.from({length:rows},()=>Array.from({length:cols},()=>Math.random()<.4?'1':'0'));
+        let count = 0; const seen = new Set();
+        for(let r=0;r<rows;r+=1) for(let c=0;c<cols;c+=1) if(grid[r][c]==='1'&&!seen.has(`${r},${c}`)){count+=1;const todo=[[r,c]];seen.add(`${r},${c}`);while(todo.length){const [x,y]=todo.pop();for(const [a,b] of [[x-1,y],[x+1,y],[x,y-1],[x,y+1]])if(a>=0&&a<rows&&b>=0&&b<cols&&grid[a][b]==='1'&&!seen.has(`${a},${b}`)){seen.add(`${a},${b}`);todo.push([a,b]);}}}
+        input = {grid}; expected = count; break;
+      }
+      case 'climbing_stairs': {
+        const n = randomInt(1, 28); let a=1,b=1; for(let i=2;i<=n;i+=1)[a,b]=[b,a+b];
+        input = {n}; expected = n===1?1:b; break;
+      }
+      case 'coin_change': {
+        const coins = [...new Set(randomArray(randomInt(1, 5), 1, 12))]; const amount = randomInt(0, 35); const dp = Array(amount+1).fill(Infinity); dp[0]=0;
+        for(let value=1;value<=amount;value+=1)for(const coin of coins)if(coin<=value)dp[value]=Math.min(dp[value],dp[value-coin]+1);
+        input = {coins,amount}; expected = Number.isFinite(dp[amount])?dp[amount]:-1; break;
+      }
+      case 'merge_intervals': {
+        const intervals = Array.from({length:randomInt(0,10)},()=>{const a=randomInt(0,30),b=randomInt(a,35);return [a,b];});
+        const sorted = [...intervals].sort((a,b)=>a[0]-b[0]); expected=[];
+        for(const interval of sorted){const last=expected[expected.length-1];if(!last||last[1]<interval[0])expected.push([...interval]);else last[1]=Math.max(last[1],interval[1]);}
+        input = {intervals}; break;
+      }
+      case 'max_depth': {
+        const makeTree=(depth=0)=>depth>=4||Math.random()<.28?null:[randomInt(-9,9),makeTree(depth+1),makeTree(depth+1)]; const tree=makeTree();
+        const depthOf=node=>node?1+Math.max(depthOf(node[1]),depthOf(node[2])):0;
+        input={tree};expected=depthOf(tree);break;
       }
       default: throw new Error(`No generated checks for ${challenge.slug}`);
     }
