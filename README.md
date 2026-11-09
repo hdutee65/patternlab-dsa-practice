@@ -4,7 +4,7 @@ PatternLab is a data structures and algorithms practice app with a recruiter-fri
 
 ## Open the live app
 
-The `site/` folder is deployed through GitHub Pages using `.github/workflows/deploy-pages.yml`. After pushing this project to a GitHub repository and enabling Pages with **GitHub Actions** as the build source, each push to `main` publishes the site. Python downloads from the official Pyodide distribution on first load, so the browser needs internet access.
+The live app is at <https://hdutee65.github.io/patternlab-dsa-practice/>. The `site/` folder is deployed through GitHub Pages using `.github/workflows/deploy-pages.yml`; pushes to `main` publish updates. Python downloads from the official Pyodide distribution on first load, so the browser needs internet access.
 
 To preview locally:
 
