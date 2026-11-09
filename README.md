@@ -2,6 +2,8 @@
 
 PatternLab is a data structures and algorithms practice app with a recruiter-friendly browser interface and a Python command-line version. The browser site links each challenge to its official LeetCode page and runs submitted Python locally in a Web Worker powered by Pyodide. It has no code-execution backend: your solution, draft, and progress stay in your browser.
 
+The browser interface has Home, Practice, Patterns, and Progress views. It remembers the last problem you worked on and offers staged hints, conceptual links, and saved reflections.
+
 ## Open the live app
 
 The live app is at <https://hdutee65.github.io/patternlab-dsa-practice/>. The `site/` folder is deployed through GitHub Pages using `.github/workflows/deploy-pages.yml`; pushes to `main` publish updates. Python downloads from the official Pyodide distribution on first load, so the browser needs internet access.
