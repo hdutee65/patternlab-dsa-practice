@@ -158,6 +158,7 @@ function renderTutor() {
   const progress = readProgress();
   const memory = challengeMemory(progress, slug);
   $('tutor-observation').textContent = tutorObservation(slug, $('code-editor').value);
+  $('tutor-principle').textContent = guide.principle;
   $('tutor-question').textContent = guide.question;
   $('hint-count').textContent = memory.hintLevel ? `Hint ${memory.hintLevel} of ${guide.hints.length} shown` : 'No hints used';
   const hintButton = $('next-hint');
