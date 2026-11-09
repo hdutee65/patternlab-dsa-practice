@@ -48,6 +48,14 @@
           <div class="editor-wrap"><div class="line-numbers" id="line-numbers" aria-hidden="true">1</div><textarea id="code-editor" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" aria-describedby="editor-hint" placeholder="# Select a challenge to load its starter code"></textarea></div>
           <div class="editor-footer"><span id="editor-hint">Python loads once in a worker; your code stays in this browser.</span><div class="editor-actions"><div class="timer" id="timer"><span class="timer-dot"></span><span id="timer-display">00:00</span></div><button class="button button-quiet" id="start-timer" type="button">Start timer</button><button class="button button-primary" id="run-code" type="button" disabled><span>Run checks</span><span aria-hidden="true">→</span></button></div></div>
         </article>
+        <article class="tutor-panel panel" aria-labelledby="tutor-title">
+          <div class="tutor-heading"><div><span class="section-kicker">YOUR STUDY PARTNER</span><h2 id="tutor-title">Think it through</h2></div><span class="tutor-badge">GUIDED PRACTICE</span></div>
+          <div class="tutor-observation" id="tutor-observation" aria-live="polite">As you write, I’ll point out ideas to check. I won’t fill in the solution for you.</div>
+          <div class="tutor-question"><span class="tutor-label">QUESTION TO CHECK YOUR THINKING</span><p id="tutor-question">What should stay true as you work through the sample?</p></div>
+          <div class="tutor-actions"><button class="button button-quiet" id="next-hint" type="button">Give me a hint</button><span class="hint-count" id="hint-count">No hints used</span></div>
+          <div class="connection-block"><span class="tutor-label">CONNECT THIS TO ANOTHER PROBLEM</span><div id="connections" class="connection-list"></div></div>
+          <div class="reflection-block"><label class="tutor-label" for="reflection-editor">YOUR OWN EXPLANATION <span>(saved for next time)</span></label><textarea id="reflection-editor" rows="2" placeholder="In my own words, this works because…"></textarea><div class="reflection-footer"><span id="reflection-status">A quick explanation helps it stick.</span><button class="button button-quiet" id="save-reflection" type="button">Save thought</button></div></div>
+        </article>
         <article class="results-panel panel" id="results-panel" aria-live="polite">
           <div class="results-heading"><div><span class="section-kicker">LATEST RUN</span><h2 id="results-title">Loading Python runtime…</h2></div><span class="result-summary" id="result-summary">— / —</span></div>
           <div class="results-list" id="results-list"><div class="empty-result"><span class="empty-check">◌</span><span>Python is getting ready for your first run.</span></div></div>
@@ -55,8 +63,10 @@
       </section>
     </section>
     <section class="progress-section panel">
-      <div class="progress-heading"><div><span class="section-kicker">KEEP A STEADY PACE</span><h2>Progress by pattern</h2></div><span class="progress-caption">Accepted attempts / total attempts</span></div>
+      <div class="progress-heading"><div><span class="section-kicker">KEEP A STEADY PACE</span><h2>Progress by pattern</h2><p class="memory-note" id="memory-status">Your drafts and study trail stay in this browser.</p></div><div class="memory-tools"><button class="button button-quiet" id="export-memory" type="button">Export memory</button><label class="button button-quiet import-button" for="import-memory">Import memory</label><input id="import-memory" type="file" accept="application/json,.json" hidden></div></div>
       <div class="category-progress" id="category-progress"><div class="progress-empty">Your category stats will show here after your first attempt.</div></div>
+      <div class="activity-heading"><span class="section-kicker">RECENT STUDY TRAIL</span><span id="activity-count" class="progress-caption">No activity yet</span></div>
+      <div class="activity-list" id="activity-list"><div class="progress-empty">Your practice sessions, attempts, and saved thoughts will appear here.</div></div>
     </section>
     <section class="student-section panel">
       <div class="progress-heading"><div><span class="section-kicker">STUDENT PERKS</span><h2>Make your student status work for you</h2></div><a class="student-pack-link" href="https://education.github.com/pack" target="_blank" rel="noreferrer">Browse the Student Developer Pack ↗</a></div>
