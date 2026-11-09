@@ -23,7 +23,7 @@ const tutorGuide = {
 function readProgress() {
   try {
     const current = JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null');
-    if (current && typeof current === 'object') return {...freshProgress(), ...current, challengeStates: current.challengeStates || {}, activity: current.activity || []};
+    if (current && typeof current === 'object') return {...freshProgress(), ...current, categories: current.categories || {}, attempts: current.attempts || [], challengeStates: current.challengeStates || {}, activity: current.activity || []};
     const legacy = JSON.parse(localStorage.getItem(LEGACY_PROGRESS_KEY) || 'null');
     return legacy ? {...freshProgress(), ...legacy} : freshProgress();
   } catch { return freshProgress(); }
