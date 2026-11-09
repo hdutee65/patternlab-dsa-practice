@@ -34,6 +34,8 @@ A solution is a Python file with `solve(data)`. The runner passes one JSON objec
 
 ## Challenges
 
+The browser library includes 22 guided problems, arranged around reusable data-structure and algorithm patterns. Each challenge links to its LeetCode source and includes sample cases plus fresh generated checks.
+
 | Slug | LeetCode | Pattern |
 | --- | --- | --- |
 | `two_sum` | [#1 Two Sum](https://leetcode.com/problems/two-sum/) | Hash maps |
@@ -44,6 +46,20 @@ A solution is a Python file with `solve(data)`. The runner passes one JSON objec
 | `merge_sorted` | [#88 Merge Sorted Array](https://leetcode.com/problems/merge-sorted-array/) | Two pointers |
 | `valid_parentheses` | [#20 Valid Parentheses](https://leetcode.com/problems/valid-parentheses/) | Stacks |
 | `merge_sort` | [#912 Sort an Array](https://leetcode.com/problems/sort-an-array/) | Sorting |
+| `contains_duplicate` | [#217 Contains Duplicate](https://leetcode.com/problems/contains-duplicate/) | Sets and hash maps |
+| `valid_anagram` | [#242 Valid Anagram](https://leetcode.com/problems/valid-anagram/) | Sets and hash maps |
+| `best_time_stock` | [#121 Best Time to Buy and Sell Stock](https://leetcode.com/problems/best-time-to-buy-and-sell-stock/) | Arrays and running state |
+| `product_except_self` | [#238 Product of Array Except Self](https://leetcode.com/problems/product-of-array-except-self/) | Arrays and running state |
+| `move_zeroes` | [#283 Move Zeroes](https://leetcode.com/problems/move-zeroes/) | Arrays and two pointers |
+| `search_insert` | [#35 Search Insert Position](https://leetcode.com/problems/search-insert-position/) | Binary search |
+| `reverse_list` | [#206 Reverse Linked List](https://leetcode.com/problems/reverse-linked-list/) | Linked lists |
+| `merge_two_lists` | [#21 Merge Two Sorted Lists](https://leetcode.com/problems/merge-two-sorted-lists/) | Linked lists |
+| `daily_temperatures` | [#739 Daily Temperatures](https://leetcode.com/problems/daily-temperatures/) | Stacks |
+| `number_of_islands` | [#200 Number of Islands](https://leetcode.com/problems/number-of-islands/) | Graphs and grid traversal |
+| `climbing_stairs` | [#70 Climbing Stairs](https://leetcode.com/problems/climbing-stairs/) | Dynamic programming |
+| `coin_change` | [#322 Coin Change](https://leetcode.com/problems/coin-change/) | Dynamic programming |
+| `merge_intervals` | [#56 Merge Intervals](https://leetcode.com/problems/merge-intervals/) | Sorting and intervals |
+| `max_depth` | [#104 Maximum Depth of Binary Tree](https://leetcode.com/problems/maximum-depth-of-binary-tree/) | Trees and recursion |
 
 ## How checking works
 
