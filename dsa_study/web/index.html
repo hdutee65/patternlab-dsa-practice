@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f4f5f2">
+    <title>PatternLab — DSA Practice</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="PatternLab home">
+        <span class="brand-mark" aria-hidden="true">P</span>
+        <span class="brand-copy"><strong>PatternLab</strong><small>DSA PRACTICE</small></span>
+      </a>
+      <div class="topbar-center"><span class="live-dot"></span> Local workspace <span class="topbar-divider">/</span> Python</div>
+      <div class="topbar-right"><span class="profile-avatar">PD</span><span class="profile-name">Philippe Dupuy</span></div>
+    </header>
+
+    <main>
+      <section class="welcome-row">
+        <div>
+          <div class="eyebrow"><span class="eyebrow-line"></span> YOUR PRACTICE SPACE</div>
+          <h1>Build the habit.<br><em>See the patterns.</em></h1>
+          <p class="welcome-copy">Small, focused reps make problem solving feel more familiar.</p>
+        </div>
+        <div class="welcome-note">
+          <span class="note-icon" aria-hidden="true">↗</span>
+          <div><strong>One problem at a time</strong><p>Choose a pattern, write a solution, and check it against the examples.</p></div>
+        </div>
+      </section>
+
+      <section class="stats-grid" aria-label="Practice summary">
+        <article class="stat-card"><span class="stat-label">ATTEMPTS</span><strong id="stat-attempts">0</strong><small>All practice sessions</small></article>
+        <article class="stat-card"><span class="stat-label">ACCEPTED</span><strong id="stat-accepted">0</strong><small>All cases passed</small></article>
+        <article class="stat-card"><span class="stat-label">ACCURACY</span><strong id="stat-accuracy">—</strong><small>Accepted attempts</small></article>
+        <article class="stat-card stat-card-accent"><span class="stat-label">AVG. SOLVE TIME</span><strong id="stat-time">—</strong><small>Accepted attempts</small></article>
+      </section>
+
+      <section class="practice-layout">
+        <aside class="library-panel panel">
+          <div class="panel-heading"><div><span class="section-kicker">LIBRARY</span><h2>Challenges</h2></div><span class="count-pill" id="challenge-count">0</span></div>
+          <label class="search-box"><span aria-hidden="true">⌕</span><input id="challenge-search" type="search" placeholder="Find a challenge" autocomplete="off"></label>
+          <div class="filter-row" id="category-filters" aria-label="Filter by category"></div>
+          <div class="challenge-list" id="challenge-list" aria-label="Challenge list"></div>
+          <div class="library-foot"><span class="library-dot"></span> Progress saves on this computer</div>
+        </aside>
+
+        <section class="work-panel">
+          <article class="problem-panel panel">
+            <div class="problem-topline"><div><span class="section-kicker" id="problem-category">SELECT A CHALLENGE</span><h2 id="problem-title">Choose your first challenge</h2></div><div class="problem-badges"><span class="difficulty-pill" id="difficulty-pill">PRACTICE</span><a class="source-link" id="source-link" href="#" target="_blank" rel="noreferrer" hidden>LeetCode ↗</a></div></div>
+            <p class="problem-prompt" id="problem-prompt">Pick a pattern from the library to see its prompt, examples, and complexity notes.</p>
+            <div class="problem-bottom"><div class="complexity-icon" aria-hidden="true">ƒ</div><div><span class="complexity-label">COMPLEXITY TO CONSIDER</span><p id="problem-complexity">Think about time and extra space before you start.</p></div></div>
+            <div class="example-row"><div><span class="example-label">SAMPLE INPUT</span><code id="sample-input">—</code></div><div class="example-arrow" aria-hidden="true">→</div><div><span class="example-label">EXPECTED OUTPUT</span><code id="sample-output">—</code></div></div>
+          </article>
+
+          <article class="editor-panel panel">
+            <div class="editor-toolbar"><div class="file-tab"><span class="python-mark">Py</span><span id="file-name">solution.py</span></div><div class="editor-meta"><span class="editor-live"><span></span> LOCAL RUNNER</span><button class="text-button" id="reset-code" type="button">Reset starter</button></div></div>
+            <label class="sr-only" for="code-editor">Python solution editor</label>
+            <div class="editor-wrap"><div class="line-numbers" id="line-numbers" aria-hidden="true">1</div><textarea id="code-editor" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" aria-describedby="editor-hint" placeholder="# Select a challenge to load its starter code"></textarea></div>
+            <div class="editor-footer"><span id="editor-hint">Your code runs locally against the listed cases.</span><div class="editor-actions"><div class="timer" id="timer"><span class="timer-dot"></span><span id="timer-display">00:00</span></div><button class="button button-quiet" id="start-timer" type="button">Start timer</button><button class="button button-primary" id="run-code" type="button"><span>Run checks</span><span aria-hidden="true">→</span></button></div></div>
+          </article>
+
+          <article class="results-panel panel" id="results-panel" aria-live="polite">
+            <div class="results-heading"><div><span class="section-kicker">LATEST RUN</span><h2 id="results-title">Ready when you are</h2></div><span class="result-summary" id="result-summary">— / —</span></div>
+            <div class="results-list" id="results-list"><div class="empty-result"><span class="empty-check">✓</span><span>Run your solution to see each case here.</span></div></div>
+          </article>
+        </section>
+      </section>
+
+      <section class="progress-section panel">
+        <div class="progress-heading"><div><span class="section-kicker">KEEP A STEADY PACE</span><h2>Progress by pattern</h2></div><span class="progress-caption">Accepted attempts / total attempts</span></div>
+        <div class="category-progress" id="category-progress"><div class="progress-empty">Your category stats will show here after your first attempt.</div></div>
+      </section>
+      <footer class="site-footer"><span>PatternLab · Philippe Dupuy</span><span>Built with Python’s standard library · No account required</span></footer>
+    </main>
+    <div class="toast" id="toast" role="status"></div>
+    <script src="/app.js" defer></script>
+  </body>
+</html>
