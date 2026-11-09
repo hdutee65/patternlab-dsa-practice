@@ -10,6 +10,25 @@ const shortTime = (seconds) => {
 const freshProgress = () => ({ schemaVersion: 2, attempts: [], categories: {}, challengeStates: {}, activity: [] });
 const PROGRESS_KEY = 'patternlab:progress:v2';
 const LEGACY_PROGRESS_KEY = 'patternlab:progress:v1';
+const appViews = new Set(['home','practice','patterns','progress']);
+const patternDescriptions = {
+  'Hash maps':'Remember values so the next lookup is fast.',
+  'Sets and hash maps':'Track what appeared and how often it appeared.',
+  'Arrays and running state':'Keep only the useful summary as you scan.',
+  'Arrays and two pointers':'Read and write with boundaries that move deliberately.',
+  'Binary search':'Use sorted order to shrink a possible answer range.',
+  'Linked lists':'Follow and reconnect nodes without losing the rest of the chain.',
+  'Stacks':'Use last-in, first-out order to manage nested or waiting work.',
+  'Graphs and grid traversal':'Explore connected neighbors while marking what you visited.',
+  'Dynamic programming':'Build a larger answer from smaller saved answers.',
+  'Sorting and intervals':'Put ranges in order, then combine overlaps in one pass.',
+  'Trees and recursion':'Solve a node by solving its smaller child trees.',
+  'Searching':'Use an invariant to narrow the remaining possibilities.',
+  'Strings / two pointers':'Compare or scan characters with clear boundaries.',
+  'Sliding window':'Grow a valid range and shrink it when its rule breaks.',
+  'Two pointers':'Move through ordered values without restarting the scan.',
+  'Sorting':'Divide the input, then merge sorted results.'
+};
 const tutorGuide = {
   two_sum: { question: 'For each number, what value would complete the target, and have you seen it before?', principle: 'A hash map remembers earlier values, so you can check a complement in constant average time.', hints: ['Try scanning once and name the missing partner for the current number.', 'Before saving the current value, check whether its partner is already in your map. Why does that order handle using one item twice?', 'Store each value with its index; when the partner is found, return the two indices.'], connections: [['valid_parentheses','Both use a dictionary for quick lookup, but the map stores complements here and matching bracket pairs there.'],['merge_sorted','Both find relationships between values; sorting enables two pointers, while a hash map works without sorted input.']] },
   binary_search: { question: 'What does your current low-to-high range guarantee, and which half can you safely discard?', principle: 'The sorted order lets each comparison eliminate half the remaining candidates.', hints: ['Set low and high to the range of indices that could still contain the target.', 'Choose a midpoint and compare it to the target. Make sure the next range is strictly smaller.', 'If you use an inclusive high bound, what condition ends the loop and how do low/high change when mid is too small or too large?'], connections: [['merge_sorted','Both rely on sorted order: binary search discards a range, while merging advances the smaller next value.'],['merge_sort','Merge sort creates sorted order; binary search takes advantage of it later.']] },
@@ -194,6 +213,50 @@ function renderActivity(progress = readProgress()) {
     row.innerHTML = `<span class="activity-dot"></span><div><strong>${escapeHtml(event.detail)}</strong><small>${escapeHtml(challenge?.title || 'PatternLab')} · ${date.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})}</small></div>`;
     list.append(row);
   });
+}
+function setView(view, updateHistory = true) {
+  if (!appViews.has(view)) view = 'home';
+  if (view === 'home') renderHome();
+  document.querySelectorAll('[data-view-target]').forEach(section => {
+    section.hidden = !section.dataset.viewTarget.split(/\s+/).includes(view);
+  });
+  document.querySelectorAll('.nav-link[data-app-view]').forEach(button => {
+    const active = button.dataset.appView === view;
+    button.classList.toggle('active', active);
+    if (active) button.setAttribute('aria-current','page'); else button.removeAttribute('aria-current');
+  });
+  if (updateHistory && location.hash !== `#${view}`) history.pushState({view},'',`#${view}`);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function renderHome() {
+  const progress = readProgress();
+  const latest = [...(progress.activity || [])].reverse().find(item => challenges.some(challenge => challenge.slug === item.slug));
+  const challenge = challenges.find(item => item.slug === latest?.slug) || challenges[0];
+  $('resume-title').textContent = challenge ? challenge.title : 'Choose a problem to start';
+  const memory = progress.challengeStates?.[challenge?.slug];
+  $('resume-detail').textContent = latest ? `Last activity: ${latest.detail}. Your draft and notes for this problem are saved here.` : 'Your drafts, attempts, and explanations stay saved in this browser.';
+  $('continue-practice').dataset.resumeSlug = challenge?.slug || '';
+  $('continue-practice').innerHTML = `${memory?.lastOpened ? 'Continue problem' : 'Open problem'} <span aria-hidden="true">→</span>`;
+}
+function renderPatternCatalog() {
+  const catalog = $('pattern-catalog');
+  catalog.replaceChildren();
+  const groups = new Map();
+  challenges.forEach(challenge => { if (!groups.has(challenge.category)) groups.set(challenge.category,[]); groups.get(challenge.category).push(challenge); });
+  for (const [category, items] of groups) {
+    const group = document.createElement('article'); group.className = 'pattern-group';
+    const heading = document.createElement('div'); heading.className = 'pattern-group-heading';
+    const title = document.createElement('div'); title.innerHTML = `<span class="section-kicker">${items.length} ${items.length === 1 ? 'PROBLEM' : 'PROBLEMS'}</span><h3>${escapeHtml(category)}</h3><p>${escapeHtml(patternDescriptions[category] || 'Practice the pattern, then look for it in another problem.')}</p>`;
+    heading.append(title);
+    const list = document.createElement('div'); list.className = 'pattern-problem-list';
+    items.forEach(item => {
+      const button = document.createElement('button'); button.type = 'button'; button.className = 'pattern-problem';
+      button.innerHTML = `<span><strong>${escapeHtml(item.title)}</strong><small>LeetCode #${item.leetcode_id} · ${escapeHtml(item.difficulty)}</small></span><span aria-hidden="true">→</span>`;
+      button.addEventListener('click', () => { selectChallenge(item.slug); setView('practice'); });
+      list.append(button);
+    });
+    group.append(heading,list); catalog.append(group);
+  }
 }
 function exportMemory() {
   const progress = readProgress();
@@ -541,6 +604,17 @@ async function init() {
   renderFilters();
   renderChallenges();
   renderProgress();
+  renderPatternCatalog();
+  renderHome();
+  document.querySelectorAll('[data-app-view]').forEach(button => button.addEventListener('click', event => {
+    if (button.tagName === 'A') event.preventDefault();
+    setView(button.dataset.appView);
+  }));
+  $('continue-practice').addEventListener('click', event => {
+    const slug = event.currentTarget.dataset.resumeSlug || challenges[0].slug;
+    selectChallenge(slug); setView('practice');
+  });
+  window.addEventListener('popstate', () => setView(location.hash.slice(1),false));
   $('challenge-search').addEventListener('input', (event) => { state.search = event.target.value.trim().toLowerCase(); renderChallenges(); });
   $('code-editor').addEventListener('input', () => { updateLineNumbers(); if (state.draftKey) { try { localStorage.setItem(state.draftKey, $('code-editor').value); } catch {} } });
   $('code-editor').addEventListener('input', () => {
@@ -595,8 +669,11 @@ async function init() {
     renderTutor();
     toast('Starter code restored.');
   });
-  selectChallenge(challenges[0].slug);
+  const lastWorked = [...(readProgress().activity || [])].reverse().find(item => challenges.some(challenge => challenge.slug === item.slug))?.slug;
+  selectChallenge(lastWorked || challenges[0].slug);
   renderActivity();
+  const initialView = location.hash.slice(1);
+  setView(appViews.has(initialView) ? initialView : 'home',false);
   try {
     await getWorker();
     $('results-title').textContent = 'Ready when you are';
