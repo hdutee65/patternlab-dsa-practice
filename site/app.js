@@ -1,5 +1,5 @@
 const challenges = window.PATTERNLAB_CHALLENGES;
-const state = { challenge: null, category: 'All', search: '', startedAt: null, elapsed: 0, timer: null, draftKey: '', worker: null, workerReady: null, runId: 0, activeRun: null };
+const state = { challenge: null, category: 'All', search: '', startedAt: null, elapsed: 0, timer: null, draftKey: '', worker: null, workerReady: null, runId: 0, activeRun: null, editedThisSession: new Set() };
 const $ = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const shortTime = (seconds) => {
@@ -7,13 +7,41 @@ const shortTime = (seconds) => {
   const total = Math.max(0, Math.round(seconds));
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 };
-const freshProgress = () => ({ attempts: [], categories: {} });
+const freshProgress = () => ({ schemaVersion: 2, attempts: [], categories: {}, challengeStates: {}, activity: [] });
+const PROGRESS_KEY = 'patternlab:progress:v2';
+const LEGACY_PROGRESS_KEY = 'patternlab:progress:v1';
+const tutorGuide = {
+  two_sum: { question: 'For each number, what value would complete the target, and have you seen it before?', principle: 'A hash map remembers earlier values, so you can check a complement in constant average time.', hints: ['Try scanning once and name the missing partner for the current number.', 'Before saving the current value, check whether its partner is already in your map. Why does that order handle using one item twice?', 'Store each value with its index; when the partner is found, return the two indices.'], connections: [['valid_parentheses','Both use a dictionary for quick lookup, but the map stores complements here and matching bracket pairs there.'],['merge_sorted','Both find relationships between values; sorting enables two pointers, while a hash map works without sorted input.']] },
+  binary_search: { question: 'What does your current low-to-high range guarantee, and which half can you safely discard?', principle: 'The sorted order lets each comparison eliminate half the remaining candidates.', hints: ['Set low and high to the range of indices that could still contain the target.', 'Choose a midpoint and compare it to the target. Make sure the next range is strictly smaller.', 'If you use an inclusive high bound, what condition ends the loop and how do low/high change when mid is too small or too large?'], connections: [['merge_sorted','Both rely on sorted order: binary search discards a range, while merging advances the smaller next value.'],['merge_sort','Merge sort creates sorted order; binary search takes advantage of it later.']] },
+  valid_palindrome: { question: 'Which two characters should be compared next, and what should happen when one is punctuation?', principle: 'Two pointers compare matching ends while skipping characters the prompt says to ignore.', hints: ['Place one pointer at each end of the text.', 'Move past non-alphanumeric characters before comparing. What if both pointers meet?', 'Compare lowercase forms; a mismatch is false, and crossing pointers means every useful pair matched.'], connections: [['longest_unique_substring','Both scan a string with boundaries. Here the ends move inward; a sliding window moves forward and shrinks when needed.'],['merge_sorted','Two pointers are useful when each pointer tracks a meaningful position in ordered data or a string.']] },
+  max_subarray: { question: 'At this number, is it better to extend the previous segment or start a new one?', principle: 'Keep the best sum ending here and the best sum seen anywhere; a negative prefix can be dropped.', hints: ['Track a running segment sum and a best answer.', 'A segment ending here either includes the previous running sum or starts at this value. Which gives the larger result?', 'Update the global best after each value. Initialize carefully so an all-negative list still returns one of its values.'], connections: [['longest_unique_substring','Both keep a current candidate and a global best; the subarray can restart, while a unique-character window shrinks.'],['binary_search','Both rely on an invariant: define exactly what your running value or search range represents.']] },
+  longest_unique_substring: { question: 'What must be true about every character inside your current window?', principle: 'A sliding window keeps a valid range and moves its left edge only when a duplicate makes the range invalid.', hints: ['Keep left and right boundaries for the current substring.', 'Track characters already in the window. When one repeats, how far must the left side move?', 'Only move left forward; after restoring uniqueness, update the longest length with right - left + 1.'], connections: [['valid_palindrome','Both reason about string boundaries, but palindrome compares from both ends while this keeps a forward-moving window.'],['max_subarray','Both compare a changing candidate against a global best, but the rule for changing the candidate is different.']] },
+  merge_sorted: { question: 'Where can you write the largest remaining value without overwriting an unread value?', principle: 'Filling from the back preserves nums1’s unread values while two pointers choose the larger tail.', hints: ['Point to the last valid value in each input and the last output slot.', 'Write the larger tail into the output slot, then move that input pointer and the output pointer.', 'When nums2 still has values, copy them. If nums1 is exhausted, nums2 must fill the remaining front.'], connections: [['binary_search','Sorted order powers both: one shrinks a search range, the other compares two sorted streams.'],['merge_sort','Merge sort repeatedly uses this same idea of combining sorted halves.']] },
+  valid_parentheses: { question: 'When a closing bracket appears, which opening bracket must match it?', principle: 'A stack remembers unmatched openers in last-in, first-out order, which mirrors nested brackets.', hints: ['Opening brackets need to wait until their matching closer appears. What structure naturally remembers the most recent one?', 'A closer fails if the stack is empty or its top is the wrong type.', 'After scanning all characters, what should be true about the stack for the string to be valid?'], connections: [['two_sum','Both use fast lookup, but a stack also preserves order so the newest unmatched opener is checked first.'],['longest_unique_substring','Both track a changing set of relevant characters/state while scanning left to right.']] },
+  merge_sort: { question: 'What smaller versions of this problem can you solve, and what is the simplest input that is already sorted?', principle: 'Divide and conquer splits the list, solves smaller pieces, then merges sorted results.', hints: ['A list of zero or one values is already sorted. Use that as your base case.', 'Split into smaller lists and recursively sort each half.', 'Merge the two sorted halves with pointers; take care to include duplicates and leftover values.'] }
+};
 function readProgress() {
-  try { return JSON.parse(localStorage.getItem('patternlab:progress:v1') || 'null') || freshProgress(); }
-  catch { return freshProgress(); }
+  try {
+    const current = JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null');
+    if (current && typeof current === 'object') return {...freshProgress(), ...current, challengeStates: current.challengeStates || {}, activity: current.activity || []};
+    const legacy = JSON.parse(localStorage.getItem(LEGACY_PROGRESS_KEY) || 'null');
+    return legacy ? {...freshProgress(), ...legacy} : freshProgress();
+  } catch { return freshProgress(); }
 }
 function saveProgress(progress) {
-  localStorage.setItem('patternlab:progress:v1', JSON.stringify(progress));
+  progress.schemaVersion = 2;
+  localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
+  localStorage.setItem(LEGACY_PROGRESS_KEY, JSON.stringify(progress));
+}
+function challengeMemory(progress, slug) {
+  progress.challengeStates ||= {};
+  progress.challengeStates[slug] ||= {hintLevel: 0, editSessions: 0, reflection: '', lastOpened: null};
+  return progress.challengeStates[slug];
+}
+function addActivity(progress, type, slug, detail) {
+  progress.activity ||= [];
+  progress.activity.push({type, slug, detail, timestamp: new Date().toISOString()});
+  progress.activity = progress.activity.slice(-120);
 }
 function toast(message) {
   const node = $('toast');
@@ -77,8 +105,14 @@ function clearResults(title = 'Ready when you are') {
 function selectChallenge(slug) {
   const challenge = challenges.find(item => item.slug === slug);
   if (!challenge) return;
+  const isNew = state.challenge?.slug !== slug;
   state.challenge = challenge;
   state.draftKey = `patternlab:draft:${slug}`;
+  const progress = readProgress();
+  const memory = challengeMemory(progress, slug);
+  memory.lastOpened = new Date().toISOString();
+  if (isNew) addActivity(progress, 'opened', slug, 'Opened for practice');
+  try { saveProgress(progress); } catch {}
   $('problem-category').textContent = challenge.category.toUpperCase();
   $('problem-title').textContent = challenge.title;
   $('problem-prompt').textContent = challenge.prompt;
@@ -94,10 +128,90 @@ function selectChallenge(slug) {
   $('sample-output').textContent = JSON.stringify(challenge.cases[0].expected);
   $('editor-hint').textContent = `Runs ${challenge.test_count} checks: listed examples plus fresh generated inputs.`;
   $('code-editor').value = localStorage.getItem(state.draftKey) ?? `def solve(data):\n    # TODO: implement ${challenge.title.toLowerCase()}\n    pass\n`;
+  $('reflection-editor').value = memory.reflection || '';
   updateLineNumbers();
   resetTimer();
   clearResults();
   renderChallenges();
+  renderTutor();
+  renderActivity(progress);
+}
+function tutorObservation(slug, code) {
+  const text = code.toLowerCase();
+  const patterns = {
+    two_sum: [[/target\s*-|target\s*-/,'You’re thinking in terms of a complement. Check that you look for it before adding the current value, so one item cannot pair with itself.'],[/\{\}|dict\(|\bseen\b|\blookup\b/,'Good direction: a map can remember values you have already passed. Be clear about whether it stores values, indices, or both.'],[/for\s+.*\bin\b/,'You have a scan taking shape. For each value, say what fact you need from the earlier part of the list.']],
+    binary_search: [[/\bmid\b/,'You have a midpoint. After each comparison, verify that the next range excludes mid and still contains every possible answer.'],[/\blow\b|\bhigh\b/,'Your bounds are in place. Decide whether high is included; that choice determines the loop condition and updates.'],[/while\s+/,'A loop fits the search. Check the empty-list case and that every pass makes the range smaller.']],
+    valid_palindrome: [[/left|right/,'Your two ends are represented. Move past punctuation before comparing, and stop when the pointers meet or cross.'],[/lower\(|isalnum|isalpha|isdigit/,'You’re accounting for normalization. The prompt wants case ignored and non-alphanumeric characters skipped.'],[/while\s+/,'A loop fits the inward scan. A mismatch can return false immediately; exhausting matching pairs means true.']],
+    max_subarray: [[/max\s*\(/,'You’re comparing choices. Check the two candidates: extend the previous segment or begin at this value.'],[/current|running|best/,'Separating a current sum from a global best is the key state. Initialize so all-negative input still works.'],[/for\s+.*\bin\b/,'As you scan, describe what your running variable means after each item. That definition will guide the update.']],
+    longest_unique_substring: [[/left|start/,'You have a left boundary. On a duplicate, move it only forward—especially when the repeated character is already outside the window.'],[/set\(|\bseen\b|last_seen|lastseen/,'Tracking seen characters is useful. Decide whether you need membership in the current window or each character’s last index.'],[/right|enumerate|for\s+.*\bin\b/,'Your scan is underway. Keep the window valid before recording its length.']],
+    merge_sorted: [[/\bi\b|\bj\b/,'You have pointer-like state. Because nums1 has spare slots, compare from the ends to avoid overwriting unread values.'],[/while\s+/,'The merge loop is forming. Remember the leftover nums2 case after nums1 runs out.'],[/sort\(|sorted\(/,'The prompt is practicing a linear merge. Try using the existing sorted order instead of sorting everything again.']],
+    valid_parentheses: [[/\bstack\b|append\(|\.pop\(/,'A stack matches the nested order. Before popping, handle an empty stack; then compare the popped opener’s expected closer.'],[/\{\s*['"]\(/,'A mapping from opener to closer can make pair checks clear. Make sure the final stack is empty.'],[/for\s+.*\bin\b/,'A left-to-right scan is right. Openers wait; each closer must match the most recent unmatched opener.']],
+    merge_sort: [[/return\s+.*nums|len\(.*\)\s*<=?\s*1/,'Check the base case: zero or one item is already sorted, so recursion stops there.'],[/merge|left|right/,'Keep splitting until the base case, then combine two sorted halves while preserving leftovers and duplicates.'],[/sort\(|sorted\(/,'The challenge asks you to build the sorting process yourself. Focus on splitting and merging rather than a built-in sort.']]
+  };
+  const match = (patterns[slug] || []).find(([regex]) => regex.test(text));
+  return match?.[1] || 'Keep going. As you write, name what each variable means and what should be true after every loop step.';
+}
+function renderTutor() {
+  if (!state.challenge) return;
+  const slug = state.challenge.slug;
+  const guide = tutorGuide[slug];
+  const progress = readProgress();
+  const memory = challengeMemory(progress, slug);
+  $('tutor-observation').textContent = tutorObservation(slug, $('code-editor').value);
+  $('tutor-question').textContent = guide.question;
+  $('hint-count').textContent = memory.hintLevel ? `Hint ${memory.hintLevel} of ${guide.hints.length} shown` : 'No hints used';
+  const hintButton = $('next-hint');
+  hintButton.disabled = memory.hintLevel >= guide.hints.length;
+  hintButton.textContent = hintButton.disabled ? 'All hints shown' : memory.hintLevel ? 'Next hint' : 'Give me a hint';
+  if (memory.hintLevel) $('tutor-observation').textContent = `${tutorObservation(slug, $('code-editor').value)}\n\nHint ${memory.hintLevel}: ${guide.hints[memory.hintLevel - 1]}`;
+  const list = $('connections');
+  list.replaceChildren();
+  (guide.connections || []).forEach(([related, reason]) => {
+    const item = challenges.find(challenge => challenge.slug === related);
+    if (!item) return;
+    const button = document.createElement('button');
+    button.type = 'button'; button.className = 'connection-card';
+    button.innerHTML = `<strong>${escapeHtml(item.title)} <span aria-hidden="true">↗</span></strong><small>${escapeHtml(reason)}</small>`;
+    button.addEventListener('click', () => { selectChallenge(related); $('problem-title').scrollIntoView({behavior:'smooth',block:'start'}); });
+    list.append(button);
+  });
+  $('reflection-status').textContent = memory.reflection ? `Last saved ${new Date(memory.reflectionAt || memory.lastOpened || Date.now()).toLocaleDateString()}` : 'A quick explanation helps it stick.';
+}
+function renderActivity(progress = readProgress()) {
+  const items = [...(progress.activity || [])].reverse().slice(0, 7);
+  $('activity-count').textContent = items.length ? `${progress.activity.length} saved events` : 'No activity yet';
+  $('memory-status').textContent = `Saved on this browser · Last updated ${new Date().toLocaleString([], {dateStyle:'medium',timeStyle:'short'})}`;
+  const list = $('activity-list');
+  list.replaceChildren();
+  if (!items.length) { list.innerHTML = '<div class="progress-empty">Your practice sessions, attempts, and saved thoughts will appear here.</div>'; return; }
+  items.forEach(event => {
+    const challenge = challenges.find(item => item.slug === event.slug);
+    const row = document.createElement('div'); row.className = 'activity-item';
+    const date = new Date(event.timestamp);
+    row.innerHTML = `<span class="activity-dot"></span><div><strong>${escapeHtml(event.detail)}</strong><small>${escapeHtml(challenge?.title || 'PatternLab')} · ${date.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})}</small></div>`;
+    list.append(row);
+  });
+}
+function exportMemory() {
+  const progress = readProgress();
+  const drafts = Object.fromEntries(challenges.map(item => [item.slug, localStorage.getItem(`patternlab:draft:${item.slug}`)]).filter(([, value]) => value !== null));
+  const blob = new Blob([JSON.stringify({app:'PatternLab',version:2,exportedAt:new Date().toISOString(),progress,drafts}, null, 2)], {type:'application/json'});
+  const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `patternlab-memory-${new Date().toISOString().slice(0,10)}.json`; link.click(); URL.revokeObjectURL(link.href);
+  toast('Memory backup downloaded.');
+}
+async function importMemory(file) {
+  try {
+    const backup = JSON.parse(await file.text());
+    if (backup.app !== 'PatternLab' || !backup.progress || !Array.isArray(backup.progress.attempts)) throw new Error('That file is not a PatternLab memory backup.');
+    const current = readProgress();
+    const incoming = backup.progress;
+    const combined = {...freshProgress(), ...current, challengeStates:{...current.challengeStates,...(incoming.challengeStates || {})}, activity:[...(current.activity || []),...(incoming.activity || [])].sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp)).slice(-120)};
+    const seen = new Set(); combined.attempts = [...current.attempts,...incoming.attempts].filter(item => { const key = `${item.slug}|${item.timestamp}|${item.passed}|${item.total}`; if(seen.has(key)) return false; seen.add(key); return true; });
+    combined.categories = {};
+    combined.attempts.forEach(item => { combined.categories[item.category] ||= {attempts:0,accepted:0}; combined.categories[item.category].attempts += 1; combined.categories[item.category].accepted += Number(item.accepted); });
+    for (const [slug, draft] of Object.entries(backup.drafts || {})) if (challenges.some(item => item.slug === slug) && typeof draft === 'string') localStorage.setItem(`patternlab:draft:${slug}`, draft);
+    saveProgress(combined); renderProgress(combined); renderChallenges(); renderActivity(combined); renderTutor(); toast('Memory imported and merged with this browser.');
+  } catch (error) { toast(error.message || 'Could not read that backup.'); }
 }
 function resetTimer() {
   clearInterval(state.timer);
@@ -159,8 +273,12 @@ function recordAttempt(slug, category, passed, total, elapsed) {
   if (!progress.categories[category]) progress.categories[category] = { attempts: 0, accepted: 0 };
   progress.categories[category].attempts += 1;
   progress.categories[category].accepted += Number(attempt.accepted);
+  const memory = challengeMemory(progress, slug);
+  memory.lastOutcome = {passed, total, accepted: attempt.accepted, timestamp: attempt.timestamp};
+  addActivity(progress, 'attempt', slug, `${attempt.accepted ? 'Passed' : 'Ran'} checks · ${passed}/${total}`);
   try { saveProgress(progress); } catch { toast('Could not save progress in this browser.'); }
   renderProgress(progress);
+  renderActivity(progress);
   renderChallenges();
 }
 function renderProgress(progress = readProgress()) {
@@ -170,6 +288,7 @@ function renderProgress(progress = readProgress()) {
   $('stat-accepted').textContent = acceptedAttempts.length;
   $('stat-accuracy').textContent = attempts.length ? `${Math.round(acceptedAttempts.length / attempts.length * 100)}%` : '—';
   $('stat-time').textContent = acceptedAttempts.length ? shortTime(acceptedAttempts.reduce((sum, item) => sum + item.elapsed_seconds, 0) / acceptedAttempts.length) : '—';
+  renderActivity(progress);
   const container = $('category-progress');
   const entries = Object.entries(progress.categories).sort((a, b) => a[0].localeCompare(b[0]));
   if (!entries.length) {
@@ -355,6 +474,17 @@ async function init() {
   renderProgress();
   $('challenge-search').addEventListener('input', (event) => { state.search = event.target.value.trim().toLowerCase(); renderChallenges(); });
   $('code-editor').addEventListener('input', () => { updateLineNumbers(); if (state.draftKey) { try { localStorage.setItem(state.draftKey, $('code-editor').value); } catch {} } });
+  $('code-editor').addEventListener('input', () => {
+    if (!state.challenge) return;
+    renderTutor();
+    if (!state.editedThisSession.has(state.challenge.slug)) {
+      state.editedThisSession.add(state.challenge.slug);
+      const progress = readProgress(); const memory = challengeMemory(progress, state.challenge.slug);
+      memory.editSessions += 1; addActivity(progress, 'edit', state.challenge.slug, 'Started working on a solution');
+      try { saveProgress(progress); } catch {}
+      renderActivity(progress);
+    }
+  });
   $('code-editor').addEventListener('keydown', (event) => {
     if (event.key === 'Tab') {
       event.preventDefault();
@@ -366,14 +496,38 @@ async function init() {
   });
   $('start-timer').addEventListener('click', startTimer);
   $('run-code').addEventListener('click', runSolution);
+  $('next-hint').addEventListener('click', () => {
+    if (!state.challenge) return;
+    const progress = readProgress(); const memory = challengeMemory(progress, state.challenge.slug);
+    const guide = tutorGuide[state.challenge.slug];
+    if (memory.hintLevel >= guide.hints.length) return;
+    memory.hintLevel += 1;
+    addActivity(progress, 'hint', state.challenge.slug, `Opened hint ${memory.hintLevel}`);
+    try { saveProgress(progress); } catch {}
+    renderTutor(); renderActivity(progress);
+  });
+  $('save-reflection').addEventListener('click', () => {
+    if (!state.challenge) return;
+    const reflection = $('reflection-editor').value.trim();
+    if (!reflection) { toast('Write a sentence in your own words first.'); return; }
+    const progress = readProgress(); const memory = challengeMemory(progress, state.challenge.slug);
+    memory.reflection = reflection; memory.reflectionAt = new Date().toISOString();
+    addActivity(progress, 'reflection', state.challenge.slug, 'Saved your explanation');
+    try { saveProgress(progress); } catch { toast('Could not save that thought in this browser.'); return; }
+    renderTutor(); renderActivity(progress); toast('Saved. Your explanation will be here next time.');
+  });
+  $('export-memory').addEventListener('click', exportMemory);
+  $('import-memory').addEventListener('change', event => { if (event.target.files?.[0]) importMemory(event.target.files[0]); event.target.value = ''; });
   $('reset-code').addEventListener('click', () => {
     if (!state.challenge) return;
     $('code-editor').value = `def solve(data):\n    # TODO: implement ${state.challenge.title.toLowerCase()}\n    pass\n`;
     if (state.draftKey) localStorage.removeItem(state.draftKey);
     updateLineNumbers();
+    renderTutor();
     toast('Starter code restored.');
   });
   selectChallenge(challenges[0].slug);
+  renderActivity();
   try {
     await getWorker();
     $('results-title').textContent = 'Ready when you are';
