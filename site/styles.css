@@ -75,18 +75,18 @@ body{background-color:#eaf0e9}body::before{filter:saturate(.78)}body::after{filt
 body{position:relative;isolation:isolate;background:radial-gradient(ellipse at 3% 0%,#e6eee4 0,transparent 30%),#edf1eb}
 body::before,body::after{content:none!important}
 .ambient-backdrop{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;--ambient-x:0px;--ambient-y:0px}
-.ambient-backdrop::after{content:"";position:absolute;inset:0;background:linear-gradient(125deg,rgba(236,243,233,.72),rgba(242,245,239,.79) 55%,rgba(246,244,237,.76))}
-.ambient-photo{position:absolute;inset:-3%;opacity:.045;background-position:center;background-size:cover;filter:saturate(.78);transform:scale(1.08) translate3d(var(--ambient-x),var(--ambient-y),0);transition:opacity 1s ease,transform 1.25s cubic-bezier(.2,.7,.2,1)}
+.ambient-backdrop::after{content:"";position:absolute;inset:0;background:linear-gradient(125deg,rgba(236,243,233,.50),rgba(242,245,239,.58) 55%,rgba(246,244,237,.54))}
+.ambient-photo{position:absolute;inset:-3%;opacity:.08;background-position:center;background-size:cover;filter:saturate(.78);transform:scale(1.08) translate3d(var(--ambient-x),var(--ambient-y),0);transition:opacity 1s ease,transform 1.25s cubic-bezier(.2,.7,.2,1)}
 .ambient-photo[data-scene="alpine"]{background-image:url("https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=2200&q=80")}
 .ambient-photo[data-scene="coast"]{background-image:url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=2200&q=80")}
 .ambient-photo[data-scene="forest"]{background-image:url("https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=2200&q=80")}
 .ambient-photo[data-scene="desert"]{background-image:url("https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=2200&q=80")}
-.ambient-backdrop[data-active-scene="alpine"] .ambient-photo[data-scene="alpine"],.ambient-backdrop[data-active-scene="coast"] .ambient-photo[data-scene="coast"],.ambient-backdrop[data-active-scene="forest"] .ambient-photo[data-scene="forest"],.ambient-backdrop[data-active-scene="desert"] .ambient-photo[data-scene="desert"]{opacity:.19}
+.ambient-backdrop[data-active-scene="alpine"] .ambient-photo[data-scene="alpine"],.ambient-backdrop[data-active-scene="coast"] .ambient-photo[data-scene="coast"],.ambient-backdrop[data-active-scene="forest"] .ambient-photo[data-scene="forest"],.ambient-backdrop[data-active-scene="desert"] .ambient-photo[data-scene="desert"]{opacity:.31}
 .panel,.stat-card{background:rgba(250,252,248,.88);border-color:rgba(224,232,222,.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 .welcome-note{background:rgba(245,249,241,.91);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 .profile-avatar{background:#cde580;color:#1e382e}
 .profile-avatar svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .timer.cursor-follow-timer{position:fixed;left:var(--cursor-timer-x,8px);top:var(--cursor-timer-y,8px);z-index:30;margin:0;min-width:66px;padding:7px 10px;border:1px solid rgba(214,231,213,.35);border-radius:999px;background:rgba(23,43,36,.93);color:#f2f7ed;box-shadow:0 10px 28px rgba(19,39,31,.24);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);pointer-events:none;transform:translateZ(0)}
 .timer.cursor-follow-timer .timer-dot{background:#cce786;box-shadow:0 0 0 3px rgba(204,231,134,.18)}
-@media(max-width:760px){.ambient-photo{opacity:.07;transform:scale(1.04)}.ambient-backdrop[data-active-scene] .ambient-photo{opacity:.07}.panel,.stat-card{background:rgba(250,252,248,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}}
+@media(max-width:760px){.ambient-photo{opacity:.07;transform:scale(1.04)}.ambient-backdrop[data-active-scene] .ambient-photo{opacity:.07!important}.panel,.stat-card{background:rgba(250,252,248,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}}
 @media(prefers-reduced-motion:reduce){.ambient-photo{transition:none;transform:none}.timer.cursor-follow-timer{position:static;transform:none}}
