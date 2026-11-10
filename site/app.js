@@ -214,20 +214,20 @@ function renderActivity(progress = readProgress()) {
     list.append(row);
   });
 }
-function setView(view, updateHistory = true) {
+function setView(view) {
   if (!appViews.has(view)) view = 'home';
   if (view === 'home') renderHome();
   document.querySelectorAll('[data-view-target]').forEach(section => {
     section.hidden = !section.dataset.viewTarget.split(/\s+/).includes(view);
   });
-  document.querySelectorAll('.nav-link[data-app-view]').forEach(button => {
-    const active = button.dataset.appView === view;
-    button.classList.toggle('active', active);
-    if (active) button.setAttribute('aria-current','page'); else button.removeAttribute('aria-current');
+  document.querySelectorAll('.nav-link[data-page-link]').forEach(link => {
+    const active = link.dataset.pageLink === view;
+    link.classList.toggle('active', active);
+    if (active) link.setAttribute('aria-current','page'); else link.removeAttribute('aria-current');
   });
-  if (updateHistory && location.hash !== `#${view}`) history.pushState({view},'',`#${view}`);
-  window.scrollTo({top:0,behavior:'smooth'});
+  window.scrollTo({top:0,behavior:'auto'});
 }
+
 function renderHome() {
   const progress = readProgress();
   const latest = [...(progress.activity || [])].reverse().find(item => challenges.some(challenge => challenge.slug === item.slug));
@@ -242,22 +242,37 @@ function renderPatternCatalog() {
   const catalog = $('pattern-catalog');
   catalog.replaceChildren();
   const groups = new Map();
-  challenges.forEach(challenge => { if (!groups.has(challenge.category)) groups.set(challenge.category,[]); groups.get(challenge.category).push(challenge); });
+  challenges.forEach(challenge => { if (!groups.has(challenge.category)) groups.set(challenge.category,[]); groups.get(challenge.category).push({...challenge, local:true}); });
+  const interactiveIds = new Set(challenges.map(item => item.leetcode_id));
+  (window.PATTERNLAB_ROADMAP || []).filter(item => !interactiveIds.has(item.id)).forEach(item => { if (!groups.has(item.category)) groups.set(item.category,[]); groups.get(item.category).push({...item, local:false}); });
+  const all = [...groups.values()].flat();
+  const total = $('patterns-total'); if (total) total.textContent = `${all.length} PRACTICE PROBLEMS`;
   for (const [category, items] of groups) {
     const group = document.createElement('article'); group.className = 'pattern-group';
     const heading = document.createElement('div'); heading.className = 'pattern-group-heading';
-    const title = document.createElement('div'); title.innerHTML = `<span class="section-kicker">${items.length} ${items.length === 1 ? 'PROBLEM' : 'PROBLEMS'}</span><h3>${escapeHtml(category)}</h3><p>${escapeHtml(patternDescriptions[category] || 'Practice the pattern, then look for it in another problem.')}</p>`;
+    const title = document.createElement('div'); title.innerHTML = `<span class="section-kicker">${items.length} ${items.length === 1 ? 'PROBLEM' : 'PROBLEMS'}</span><h3>${escapeHtml(category)}</h3><p>${escapeHtml(patternDescriptions[category] || 'Practice the idea, then look for it in another problem.')}</p>`;
     heading.append(title);
     const list = document.createElement('div'); list.className = 'pattern-problem-list';
     items.forEach(item => {
-      const button = document.createElement('button'); button.type = 'button'; button.className = 'pattern-problem';
-      button.innerHTML = `<span><strong>${escapeHtml(item.title)}</strong><small>LeetCode #${item.leetcode_id} · ${escapeHtml(item.difficulty)}</small></span><span aria-hidden="true">→</span>`;
-      button.addEventListener('click', () => { selectChallenge(item.slug); setView('practice'); });
-      list.append(button);
+      const link = document.createElement('a'); link.className = 'pattern-problem';
+      link.href = item.local ? `./practice.html?challenge=${encodeURIComponent(item.slug)}` : item.url;
+      if (!item.local) { link.target = '_blank'; link.rel = 'noreferrer'; }
+      link.innerHTML = `<span><strong>${escapeHtml(item.title)}</strong><small>${item.local ? `Guided here · LeetCode #${item.leetcode_id}` : `LeetCode #${item.id} · ${escapeHtml(item.difficulty)} · ${escapeHtml(item.focus)}`}</small></span><span aria-hidden="true">${item.local ? '→' : '↗'}</span>`;
+      list.append(link);
     });
     group.append(heading,list); catalog.append(group);
   }
+  const search = $('pattern-search');
+  if (search) search.oninput = () => {
+    const query = search.value.trim().toLowerCase();
+    catalog.querySelectorAll('.pattern-group').forEach(group => {
+      let visible = 0;
+      group.querySelectorAll('.pattern-problem').forEach(card => { const match = card.textContent.toLowerCase().includes(query); card.hidden = !match; if(match) visible++; });
+      group.hidden = visible === 0;
+    });
+  };
 }
+
 function exportMemory() {
   const progress = readProgress();
   const drafts = Object.fromEntries(challenges.map(item => [item.slug, localStorage.getItem(`patternlab:draft:${item.slug}`)]).filter(([, value]) => value !== null));
@@ -601,20 +616,16 @@ async function runSolution() {
   }
 }
 async function init() {
+  const pageView = ({'practice.html':'practice','patterns.html':'patterns','progress.html':'progress'})[location.pathname.split('/').pop()] || 'home';
   renderFilters();
   renderChallenges();
   renderProgress();
   renderPatternCatalog();
   renderHome();
-  document.querySelectorAll('[data-app-view]').forEach(button => button.addEventListener('click', event => {
-    if (button.tagName === 'A') event.preventDefault();
-    setView(button.dataset.appView);
-  }));
   $('continue-practice').addEventListener('click', event => {
     const slug = event.currentTarget.dataset.resumeSlug || challenges[0].slug;
-    selectChallenge(slug); setView('practice');
+    location.href = `./practice.html?challenge=${encodeURIComponent(slug)}`;
   });
-  window.addEventListener('popstate', () => setView(location.hash.slice(1),false));
   $('challenge-search').addEventListener('input', (event) => { state.search = event.target.value.trim().toLowerCase(); renderChallenges(); });
   $('code-editor').addEventListener('input', () => { updateLineNumbers(); if (state.draftKey) { try { localStorage.setItem(state.draftKey, $('code-editor').value); } catch {} } });
   $('code-editor').addEventListener('input', () => {
@@ -669,11 +680,15 @@ async function init() {
     renderTutor();
     toast('Starter code restored.');
   });
-  const lastWorked = [...(readProgress().activity || [])].reverse().find(item => challenges.some(challenge => challenge.slug === item.slug))?.slug;
-  selectChallenge(lastWorked || challenges[0].slug);
+  if (pageView === 'practice') {
+    const lastWorked = [...(readProgress().activity || [])].reverse().find(item => challenges.some(challenge => challenge.slug === item.slug))?.slug;
+    const requestedChallenge = new URLSearchParams(location.search).get('challenge');
+    const initialChallenge = challenges.some(item => item.slug === requestedChallenge) ? requestedChallenge : lastWorked || challenges[0].slug;
+    selectChallenge(initialChallenge);
+  }
   renderActivity();
-  const initialView = location.hash.slice(1);
-  setView(appViews.has(initialView) ? initialView : 'home',false);
+  setView(pageView);
+  if (pageView !== 'practice') return;
   try {
     await getWorker();
     $('results-title').textContent = 'Ready when you are';
