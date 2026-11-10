@@ -207,12 +207,17 @@ function initAccountUI() {
         } catch (error) { accountStatus(error.message || 'Could not connect to your account.','error'); }
         finally { $('account-submit').disabled = false; }
       });
+      $('account-form').hidden = false;
+      $('auth-mode-toggle').hidden = false;
       cloudClient.auth.onAuthStateChange((_event,session) => setTimeout(() => restoreCloudUser(session?.user || null),0));
       cloudClient.auth.getSession().then(({data}) => restoreCloudUser(data.session?.user || null)).catch(error => accountStatus(error.message,'error'));
       accountStatus('Cloud account service is ready. Create an account or sign in.','success');
     } catch (error) { accountStatus(`Cloud setup error: ${error.message}`,'error'); }
-  } else if (config.url || config.publishableKey) {
-    accountStatus('Cloud setup needs an HTTPS Supabase URL and a browser-safe sb_publishable_ key. Do not use a secret or service-role key.','error');
+  } else {
+    $('account-form').hidden = true;
+    $('auth-mode-toggle').hidden = true;
+    if (config.url || config.publishableKey) accountStatus('Cloud setup needs an HTTPS Supabase URL and a browser-safe sb_publishable_ key. Do not use a secret or service-role key.','error');
+    else accountStatus('Cloud accounts are not connected yet. Your progress is safe on this browser until you connect Supabase.');
   }
   setAuthMode('signup');
 }
