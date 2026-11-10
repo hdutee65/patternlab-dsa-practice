@@ -2,7 +2,7 @@
 
 PatternLab is a data structures and algorithms practice app with a recruiter-friendly browser interface and a Python command-line version. The browser site links each challenge to its official LeetCode page and runs submitted Python locally in a Web Worker powered by Pyodide. It has no code-execution backend: your solution, draft, and progress stay in your browser.
 
-The browser interface has Home, Practice, Patterns, and Progress views. It remembers the last problem you worked on and offers staged hints, conceptual links, and saved reflections.
+The browser site has separate Home, Practice, Patterns, and Progress pages with normal links between them. The Patterns page lists 107 LeetCode problems grouped by technique: 22 have a local Python editor with automated checks, and the remaining 85 link directly to LeetCode with a short study focus. Drafts, attempts, hints, and reflections for the 22 guided problems stay saved in the same browser.
 
 ## Open the live app
 
@@ -34,9 +34,9 @@ python3 -m dsa_study progress
 
 A solution is a Python file with `solve(data)`. The runner passes one JSON object on standard input and expects one JSON value on standard output. Progress is saved locally under `~/.dsa-self-study/`.
 
-## Challenges
+## Guided challenges
 
-The browser library includes 22 guided problems, arranged around reusable data-structure and algorithm patterns. Each challenge links to its LeetCode source and includes sample cases plus fresh generated checks.
+The browser editor currently supports 22 guided problems with sample cases, generated checks, hints, and saved notes. The Patterns page adds 85 more LeetCode exercises with concise study cues and direct links. Those 85 are a roadmap, not locally auto-graded challenges.
 
 | Slug | LeetCode | Pattern |
 | --- | --- | --- |
