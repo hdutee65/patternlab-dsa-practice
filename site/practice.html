@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f5f2">
+  <meta name="description" content="Practice data structures and algorithms with Python, guided hints, saved progress, and LeetCode links.">
+  <title>PatternLab — DSA Practice</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./index.html" aria-label="PatternLab home"><span class="brand-mark" aria-hidden="true">P</span><span class="brand-copy"><strong>PatternLab</strong><small>DSA PRACTICE</small></span></a>
+    <nav class="main-nav" aria-label="Main navigation"><a class="nav-link" href="./index.html" data-page-link="home">Home</a><a class="nav-link" href="./practice.html" data-page-link="practice">Practice</a><a class="nav-link" href="./patterns.html" data-page-link="patterns">Patterns</a><a class="nav-link" href="./progress.html" data-page-link="progress">Progress</a></nav>
+    <div class="topbar-center"><span class="live-dot"></span> PYTHON <span class="topbar-divider">/</span> RUNS IN YOUR BROWSER</div>
+    <div class="topbar-right"><span class="profile-avatar">PD</span><span class="profile-name">Philippe Dupuy</span></div>
+  </header>
+  <aside class="file-warning" id="file-warning" hidden>You’re viewing the local Mac copy. For working Python checks, use the <a href="https://hdutee65.github.io/patternlab-dsa-practice/">live site</a>.</aside>
+  <main>
+    <section class="welcome-row" data-view-target="home">
+      <div><div class="eyebrow"><span class="eyebrow-line"></span> YOUR PRACTICE SPACE</div><h1>Build the habit.<br><em>See the patterns.</em></h1><p class="welcome-copy">Small, focused reps make problem solving feel more familiar.</p><div class="hero-actions"><a class="button button-primary" href="./practice.html">Start practicing <span aria-hidden="true">→</span></a><a class="hero-secondary" href="./patterns.html">Explore 107 practice problems</a></div></div>
+      <div class="welcome-note"><span class="note-icon" aria-hidden="true">↗</span><div><strong>One problem at a time</strong><p>Write a solution, get a nudge, then test it against fresh cases.</p></div></div>
+    </section>
+    <section class="stats-grid" data-view-target="home progress" aria-label="Practice summary">
+      <article class="stat-card"><span class="stat-label">ATTEMPTS</span><strong id="stat-attempts">0</strong><small>On this device</small></article>
+      <article class="stat-card"><span class="stat-label">ACCEPTED</span><strong id="stat-accepted">0</strong><small>All cases passed</small></article>
+      <article class="stat-card"><span class="stat-label">ACCURACY</span><strong id="stat-accuracy">—</strong><small>Accepted attempts</small></article>
+      <article class="stat-card stat-card-accent"><span class="stat-label">AVG. SOLVE TIME</span><strong id="stat-time">—</strong><small>Accepted attempts</small></article>
+    </section>
+    <section class="home-dashboard" data-view-target="home">
+      <article class="resume-card"><div class="resume-icon">↻</div><div class="resume-copy"><span class="section-kicker">PICK UP WHERE YOU LEFT OFF</span><h2 id="resume-title">Choose a problem to start</h2><p id="resume-detail">Your drafts, attempts, and explanations stay saved in this browser.</p></div><button class="button button-primary" id="continue-practice" type="button">Open problem <span aria-hidden="true">→</span></button></article>
+      <div class="home-shortcuts"><a class="shortcut-card" href="./practice.html"><span class="shortcut-symbol">⌨</span><strong>Write and run code</strong><small>Python runs in your browser</small><span class="shortcut-arrow">→</span></a><a class="shortcut-card" href="./patterns.html"><span class="shortcut-symbol">◈</span><strong>Learn a pattern</strong><small>Build connections across problems</small><span class="shortcut-arrow">→</span></a><a class="shortcut-card" href="./progress.html"><span class="shortcut-symbol">↗</span><strong>Review your progress</strong><small>See attempts and study notes</small><span class="shortcut-arrow">→</span></a></div>
+    </section>
+    <section class="practice-layout" data-view-target="practice" hidden>
+      <aside class="library-panel panel">
+        <div class="panel-heading"><div><span class="section-kicker">LIBRARY</span><h2>Challenges</h2></div><span class="count-pill" id="challenge-count">0</span></div>
+        <label class="search-box"><span aria-hidden="true">⌕</span><input id="challenge-search" type="search" placeholder="Find a challenge" autocomplete="off"></label>
+        <div class="filter-row" id="category-filters" aria-label="Filter by category"></div>
+        <div class="challenge-list" id="challenge-list" aria-label="Challenge list"></div>
+        <div class="library-foot"><span class="library-dot"></span> Progress saves on this device</div>
+      </aside>
+      <section class="work-panel">
+        <article class="problem-panel panel">
+          <div class="problem-topline"><div><span class="section-kicker" id="problem-category">SELECT A CHALLENGE</span><h2 id="problem-title">Choose your first challenge</h2></div><div class="problem-badges"><span class="difficulty-pill" id="difficulty-pill">PRACTICE</span><a class="source-link" id="source-link" href="#" target="_blank" rel="noreferrer" hidden>LeetCode ↗</a></div></div>
+          <p class="problem-prompt" id="problem-prompt">Pick a pattern from the library to see its prompt, examples, and complexity notes.</p>
+          <div class="problem-bottom"><div class="complexity-icon" aria-hidden="true">ƒ</div><div><span class="complexity-label">COMPLEXITY TO CONSIDER</span><p id="problem-complexity">Think about time and extra space before you start.</p></div></div>
+          <div class="example-row"><div><span class="example-label">SAMPLE INPUT</span><code id="sample-input">—</code></div><div class="example-arrow" aria-hidden="true">→</div><div><span class="example-label">EXPECTED OUTPUT</span><code id="sample-output">—</code></div></div>
+        </article>
+        <article class="editor-panel panel">
+          <div class="editor-toolbar"><div class="file-tab"><span class="python-mark">Py</span><span id="file-name">solution.py</span></div><div class="editor-meta"><span class="editor-live" id="runtime-status"><span></span> STARTING PYTHON</span><button class="text-button" id="reset-code" type="button">Reset starter</button></div></div>
+          <label class="sr-only" for="code-editor">Python solution editor</label>
+          <div class="editor-wrap"><div class="line-numbers" id="line-numbers" aria-hidden="true">1</div><textarea id="code-editor" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" aria-describedby="editor-hint" placeholder="# Select a challenge to load its starter code"></textarea></div>
+          <div class="editor-footer"><span id="editor-hint">Python loads once in a worker; your code stays in this browser.</span><div class="editor-actions"><div class="timer" id="timer"><span class="timer-dot"></span><span id="timer-display">00:00</span></div><button class="button button-quiet" id="start-timer" type="button">Start timer</button><button class="button button-primary" id="run-code" type="button" disabled><span>Run checks</span><span aria-hidden="true">→</span></button></div></div>
+        </article>
+        <article class="tutor-panel panel" aria-labelledby="tutor-title">
+          <div class="tutor-heading"><div><span class="section-kicker">YOUR STUDY PARTNER</span><h2 id="tutor-title">Think it through</h2></div><span class="tutor-badge">GUIDED PRACTICE</span></div>
+          <div class="tutor-observation" id="tutor-observation" aria-live="polite">As you write, I’ll point out ideas to check. I won’t fill in the solution for you.</div>
+          <div class="tutor-principle"><span class="tutor-label">CORE IDEA</span><p id="tutor-principle">The concept this problem is practicing will show here.</p></div>
+          <div class="tutor-question"><span class="tutor-label">QUESTION TO CHECK YOUR THINKING</span><p id="tutor-question">What should stay true as you work through the sample?</p></div>
+          <div class="tutor-actions"><button class="button button-quiet" id="next-hint" type="button">Give me a hint</button><span class="hint-count" id="hint-count">No hints used</span></div>
+          <div class="connection-block"><span class="tutor-label">CONNECT THIS TO ANOTHER PROBLEM</span><div id="connections" class="connection-list"></div></div>
+          <div class="reflection-block"><label class="tutor-label" for="reflection-editor">YOUR OWN EXPLANATION <span>(saved for next time)</span></label><textarea id="reflection-editor" rows="2" placeholder="In my own words, this works because…"></textarea><div class="reflection-footer"><span id="reflection-status">A quick explanation helps it stick.</span><button class="button button-quiet" id="save-reflection" type="button">Save thought</button></div></div>
+        </article>
+        <article class="results-panel panel" id="results-panel" aria-live="polite">
+          <div class="results-heading"><div><span class="section-kicker">LATEST RUN</span><h2 id="results-title">Loading Python runtime…</h2></div><span class="result-summary" id="result-summary">— / —</span></div>
+          <div class="results-list" id="results-list"><div class="empty-result"><span class="empty-check">◌</span><span>Python is getting ready for your first run.</span></div></div>
+        </article>
+      </section>
+    </section>
+    <section class="patterns-view panel" id="patterns-view" data-view-target="patterns" hidden><div class="patterns-heading"><div><span class="section-kicker">THE PATTERN LIBRARY</span><h2>Learn the idea. Then spot it again.</h2><p>Pick a problem to see what it practices and which ideas connect to it.</p></div><span class="count-pill" id="patterns-total">107 PRACTICE PROBLEMS</span></div><label class="search-box pattern-search"><span aria-hidden="true">⌕</span><input id="pattern-search" type="search" placeholder="Search 107 problems or patterns" autocomplete="off"></label><div class="pattern-catalog" id="pattern-catalog"></div></section>
+    <section class="progress-section panel" data-view-target="progress" hidden>
+      <div class="progress-heading"><div><span class="section-kicker">KEEP A STEADY PACE</span><h2>Progress by pattern</h2><p class="memory-note" id="memory-status">Your drafts and study trail stay in this browser.</p></div><div class="memory-tools"><button class="button button-quiet" id="export-memory" type="button">Export memory</button><label class="button button-quiet import-button" for="import-memory">Import memory</label><input id="import-memory" type="file" accept="application/json,.json" hidden></div></div>
+      <div class="category-progress" id="category-progress"><div class="progress-empty">Your category stats will show here after your first attempt.</div></div>
+      <div class="activity-heading"><span class="section-kicker">RECENT STUDY TRAIL</span><span id="activity-count" class="progress-caption">No activity yet</span></div>
+      <div class="activity-list" id="activity-list"><div class="progress-empty">Your practice sessions, attempts, and saved thoughts will appear here.</div></div>
+    </section>
+    <section class="student-section panel" data-view-target="progress" hidden>
+      <div class="progress-heading"><div><span class="section-kicker">STUDENT PERKS</span><h2>Make your student status work for you</h2></div><a class="student-pack-link" href="https://education.github.com/pack" target="_blank" rel="noreferrer">Browse the Student Developer Pack ↗</a></div>
+      <div class="student-cards">
+        <article class="student-card"><span class="student-icon">GH</span><div><strong>GitHub Student Developer Pack</strong><p>Apply with proof of enrollment to unlock student developer tools, learning offers, and benefits like GitHub Pro while verified.</p><a href="https://education.github.com/pack" target="_blank" rel="noreferrer">Check current offers ↗</a></div></article>
+        <article class="student-card"><span class="student-icon azure-icon">AZ</span><div><strong>Azure for Students</strong><p>The current offer lists $100 Azure credit for eligible students. Your account shows Disabled; check its credit status before trying anything that asks you to upgrade.</p><a href="https://learn.microsoft.com/en-us/azure/cost-management-billing/manage/azurestudents-subscription-disabled" target="_blank" rel="noreferrer">See reactivation steps ↗</a></div></article>
+        <article class="student-card"><span class="student-icon learn-icon">↗</span><div><strong>Free cloud learning</strong><p>Learn Azure fundamentals with free Microsoft Learn modules and keep the demo hosted on no-cost static Pages hosting.</p><a href="https://learn.microsoft.com/training/azure/" target="_blank" rel="noreferrer">Start learning ↗</a></div></article>
+      </div>
+      <p class="student-footnote">Offers and eligibility can change. Confirm terms on each provider’s official page before signing up.</p>
+    </section>
+    <footer class="site-footer"><span>PatternLab · Philippe Dupuy</span><span>Python executes in your browser · No account required</span></footer>
+  </main>
+  <div class="toast" id="toast" role="status"></div>
+  <script>if(location.protocol==='file:')document.getElementById('file-warning').hidden=false;</script>
+  <script src="./challenges.js"></script>
+  <script src="./roadmap.js"></script>
+  <script src="./tutor-guides.js"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
