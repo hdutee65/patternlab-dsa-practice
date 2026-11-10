@@ -95,8 +95,8 @@
       <p class="account-intro">Sign in to sync drafts, attempts, hints, and study notes across devices.</p>
       <div class="account-status" id="account-status" role="status">Cloud accounts are not connected yet.</div>
       <p class="account-setup-link"><a href="./cloud-setup.html" target="_blank" rel="noreferrer">How account sync is set up ↗</a></p>
-      <div class="auth-mode-toggle" id="auth-mode-toggle"><button type="button" class="auth-mode active" data-auth-mode="signup">Create account</button><button type="button" class="auth-mode" data-auth-mode="signin">Sign in</button></div>
-      <form id="account-form" class="account-form">
+      <div class="auth-mode-toggle" id="auth-mode-toggle" hidden><button type="button" class="auth-mode active" data-auth-mode="signup">Create account</button><button type="button" class="auth-mode" data-auth-mode="signin">Sign in</button></div>
+      <form id="account-form" class="account-form" hidden>
         <label id="display-name-row">Name<input id="account-name" name="name" autocomplete="name" maxlength="60" placeholder="Your name"></label>
         <label>Email<input id="account-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
         <label>Password<input id="account-password" name="password" type="password" autocomplete="new-password" minlength="8" required placeholder="At least 8 characters"></label>
