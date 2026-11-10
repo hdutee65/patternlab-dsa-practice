@@ -1,0 +1,19 @@
+{
+  "id": "./",
+  "name": "PatternLab — DSA Practice",
+  "short_name": "PatternLab",
+  "description": "A focused, guided space to practice data structures and algorithms.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eaf0e9",
+  "theme_color": "#132420",
+  "icons": [
+    {
+      "src": "./icons/patternlab.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

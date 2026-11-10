@@ -3,22 +3,26 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f4f5f2">
+  <meta name="theme-color" content="#132420">
   <meta name="description" content="Practice data structures and algorithms with Python, guided hints, saved progress, and LeetCode links.">
   <title>PatternLab — DSA Practice</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="./styles.css">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/patternlab.svg" type="image/svg+xml">
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
   <header class="topbar">
     <a class="brand" href="./index.html" aria-label="PatternLab home"><span class="brand-mark" aria-hidden="true">P</span><span class="brand-copy"><strong>PatternLab</strong><small>DSA PRACTICE</small></span></a>
     <nav class="main-nav" aria-label="Main navigation"><a class="nav-link" href="./index.html" data-page-link="home">Home</a><a class="nav-link" href="./practice.html" data-page-link="practice">Practice</a><a class="nav-link" href="./patterns.html" data-page-link="patterns">Patterns</a><a class="nav-link" href="./progress.html" data-page-link="progress">Progress</a></nav>
     <div class="topbar-center"><span class="live-dot"></span> PYTHON + JAVASCRIPT <span class="topbar-divider">/</span> BROWSER RUNNERS</div>
-    <div class="topbar-right"><button class="account-trigger" id="account-open" type="button"><span class="profile-avatar" id="account-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="8" r="3.25"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></svg></span><span class="profile-name" id="account-label">Sign in / Create account</span></button></div>
+    <div class="topbar-right"><button class="install-app-button" id="install-app" type="button" aria-label="Install PatternLab" title="Install PatternLab" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 16v4h14v-4"/></svg><span>Install</span></button><button class="account-trigger" id="account-open" type="button"><span class="profile-avatar" id="account-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="8" r="3.25"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></svg></span><span class="profile-name" id="account-label">Sign in / Create account</span></button></div>
   </header>
+  <div class="connection-banner" id="connection-banner" role="status" aria-live="polite" hidden><span class="offline-pulse" aria-hidden="true"></span>Offline mode · your local progress is still saved</div>
   <aside class="file-warning" id="file-warning" hidden>You’re viewing the local Mac copy. For working Python checks, use the <a href="https://hdutee65.github.io/patternlab-dsa-practice/">live site</a>.</aside>
-  <main>
+  <main id="main-content">
     <section class="welcome-row" data-view-target="home">
       <div><div class="eyebrow"><span class="eyebrow-line"></span> YOUR PRACTICE SPACE</div><h1>Build the habit.<br><em>See the patterns.</em></h1><p class="welcome-copy">Small, focused reps make problem solving feel more familiar.</p><div class="hero-actions"><a class="button button-primary" href="./practice.html">Start practicing <span aria-hidden="true">→</span></a><a class="hero-secondary" href="./patterns.html">Explore 107 practice problems</a></div></div>
       <div class="welcome-note"><span class="note-icon" aria-hidden="true">↗</span><div><strong>One problem at a time</strong><p>Write a solution, get a nudge, then test it against fresh cases.</p></div></div>
@@ -113,6 +117,7 @@
   <script src="./tutor-guides.js"></script>
   <script src="./supabase-config.js?v=cloud-sync-setup"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./pwa.js"></script>
   <script type="module" src="./app.js"></script>
 </body>
 </html>

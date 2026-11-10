@@ -2,9 +2,11 @@
 
 ## Current structure
 
+- The live GitHub Pages site already has Supabase configured and the progress migration applied. These setup instructions are for a separate deployment or fork.
 - `site/index.html`, `practice.html`, `patterns.html`, and `progress.html` are page shells. They share one app module and stylesheet.
 - `site/challenges.js`, `roadmap.js`, and `tutor-guides.js` hold the challenge catalog and learning content.
 - `site/app.js` handles navigation, local drafts, guided practice, and progress. Python and JavaScript have separate Web Workers.
+- `site/pwa.js`, `manifest.webmanifest`, and `sw.js` make the site installable and cache its static shell for offline reading.
 - Browser-only use stores progress in that browser's local storage. Export a memory backup from Progress if you want a manual copy.
 - `site/supabase-config.js` is the public connection point. It must contain a Supabase project URL and publishable key before account sign-up can work.
 - `supabase/migrations/20261110000100_patternlab_progress.sql` creates a user-owned progress table with row-level security (RLS).

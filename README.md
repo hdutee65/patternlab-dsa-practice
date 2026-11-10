@@ -2,11 +2,11 @@
 
 PatternLab is a data structures and algorithms practice app with a recruiter-friendly browser interface and a Python command-line version. The browser site links each challenge to its official LeetCode page and runs Python (Pyodide) and JavaScript (a dedicated Web Worker) locally in your browser. C++, Java, and TypeScript open the official LeetCode compiler for each challenge. It has no code-execution backend.
 
-The browser site has separate Home, Practice, Patterns, and Progress pages with normal links between them. The Patterns page lists 107 LeetCode problems grouped by technique: 22 have a local Python/JavaScript editor with automated checks, and the remaining 85 link directly to LeetCode with a short study focus. Drafts, attempts, hints, and reflections for the guided problems stay in the current browser by default. Optional cross-device accounts use Supabase Auth and a row-level-security protected progress table. Account sync stays unavailable until a Supabase project URL and publishable key are configured; setup is documented in [`docs/cloud-accounts.md`](docs/cloud-accounts.md) and at the site’s Account Setup page. Never put a Supabase secret/service-role key in frontend code.
+The browser site has separate Home, Practice, Patterns, and Progress pages with normal links between them. The Patterns page lists 107 LeetCode problems grouped by technique: 22 have a local Python/JavaScript editor with automated checks, and the remaining 85 link directly to LeetCode with a short study focus. Drafts, attempts, hints, and reflections stay in the current browser by default. Optional cross-device accounts use Supabase Auth and a row-level-security protected progress table; the live site is connected, and users create their own accounts from the account panel. Never put a Supabase secret/service-role key in frontend code.
 
 ## Open the live app
 
-The live app is at <https://hdutee65.github.io/patternlab-dsa-practice/>. The `site/` folder is deployed through GitHub Pages using `.github/workflows/deploy-pages.yml`; pushes to `main` publish updates. Python downloads from the official Pyodide distribution on first load, so the browser needs internet access.
+The live app is at <https://hdutee65.github.io/patternlab-dsa-practice/>. The `site/` folder is deployed through GitHub Pages using `.github/workflows/deploy-pages.yml`; pushes to `main` publish updates. PatternLab is installable as a progressive web app and caches its static shell for offline reading. Python downloads from the official Pyodide distribution on first load, so Python runs need internet access until the runtime is cached by the browser. Cloud sync also needs internet access.
 
 To preview locally:
 
