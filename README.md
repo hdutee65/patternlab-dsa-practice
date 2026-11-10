@@ -1,8 +1,8 @@
 # PatternLab — DSA Practice
 
-PatternLab is a data structures and algorithms practice app with a recruiter-friendly browser interface and a Python command-line version. The browser site links each challenge to its official LeetCode page and runs submitted Python locally in a Web Worker powered by Pyodide. It has no code-execution backend: your solution, draft, and progress stay in your browser.
+PatternLab is a data structures and algorithms practice app with a recruiter-friendly browser interface and a Python command-line version. The browser site links each challenge to its official LeetCode page and runs Python (Pyodide) and JavaScript (a dedicated Web Worker) locally in your browser. C++, Java, and TypeScript open the official LeetCode compiler for each challenge. It has no code-execution backend.
 
-The browser site has separate Home, Practice, Patterns, and Progress pages with normal links between them. The Patterns page lists 107 LeetCode problems grouped by technique: 22 have a local Python editor with automated checks, and the remaining 85 link directly to LeetCode with a short study focus. Drafts, attempts, hints, and reflections for the 22 guided problems stay saved in the same browser.
+The browser site has separate Home, Practice, Patterns, and Progress pages with normal links between them. The Patterns page lists 107 LeetCode problems grouped by technique: 22 have a local Python/JavaScript editor with automated checks, and the remaining 85 link directly to LeetCode with a short study focus. Drafts, attempts, hints, and reflections for the guided problems stay in the current browser by default. Optional cross-device accounts use Supabase Auth and a row-level-security protected progress table. Account sync stays unavailable until a Supabase project URL and publishable key are configured; setup is documented in [`docs/cloud-accounts.md`](docs/cloud-accounts.md) and at the site’s Account Setup page. Never put a Supabase secret/service-role key in frontend code.
 
 ## Open the live app
 
@@ -63,8 +63,12 @@ The browser editor currently supports 22 guided problems with sample cases, gene
 | `merge_intervals` | [#56 Merge Intervals](https://leetcode.com/problems/merge-intervals/) | Sorting and intervals |
 | `max_depth` | [#104 Maximum Depth of Binary Tree](https://leetcode.com/problems/maximum-depth-of-binary-tree/) | Trees and recursion |
 
+## Language support
+
+The local editor and check runner support Python and JavaScript using the same `solve(data)` input/output contract. C++, Java, and TypeScript are offered as language choices that open the matching LeetCode problem, where the official compiler and function signature are available.
+
 ## How checking works
 
-Every run executes the code from the editor. It is checked against the listed examples plus six newly generated inputs. Expected values are calculated independently for each generated case. The sample/reference solutions in `solutions/` are separate study examples and are not used to answer submissions.
+Every local run executes the code from the editor in a dedicated browser worker. It is checked against the listed examples plus six newly generated inputs. Expected values are calculated independently for each generated case. The sample/reference solutions in `solutions/` are separate study examples and are not used to answer submissions.
 
 The browser-side worker keeps candidate code out of a server. The separate Python CLI and local web API are for local practice only; do not expose `dsa_study.web_app` publicly, because it executes code with the host user's permissions.
