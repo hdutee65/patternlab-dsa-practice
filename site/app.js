@@ -1,5 +1,5 @@
 const challenges = window.PATTERNLAB_CHALLENGES;
-const state = { challenge: null, category: 'All', search: '', startedAt: null, elapsed: 0, timer: null, draftKey: '', worker: null, workerReady: null, runId: 0, activeRun: null, editedThisSession: new Set() };
+const state = { challenge: null, category: 'All', search: '', startedAt: null, elapsed: 0, timer: null, draftKey: '', language: localStorage.getItem('patternlab:language') || 'python', worker: null, workerLanguage: null, workerReady: null, runId: 0, activeRun: null, editedThisSession: new Set() };
 const $ = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const shortTime = (seconds) => {
@@ -8,8 +8,18 @@ const shortTime = (seconds) => {
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 };
 const freshProgress = () => ({ schemaVersion: 2, attempts: [], categories: {}, challengeStates: {}, activity: [] });
+const draftKeyFor = (slug, language) => language === 'python' ? `patternlab:draft:${slug}` : `patternlab:draft:${slug}:${language}`;
+const starterFor = (language, challenge) => language === 'javascript' ? `function solve(data) {\n  // TODO: implement ${challenge.title}\n  return null;\n}\n` : `def solve(data):\n    # TODO: implement ${challenge.title.toLowerCase()}\n    pass\n`;
+const localLanguages = new Set(['python','javascript']);
 const PROGRESS_KEY = 'patternlab:progress:v2';
 const LEGACY_PROGRESS_KEY = 'patternlab:progress:v1';
+const CLOUD_TABLE = 'patternlab_progress';
+let cloudClient = null;
+let cloudUser = null;
+let cloudSyncTimer = null;
+let cloudAuthMode = 'signup';
+let applyingCloudSnapshot = false;
+const CLOUD_OWNER_KEY = 'patternlab:cloud-owner';
 const appViews = new Set(['home','practice','patterns','progress']);
 const patternDescriptions = {
   'Hash maps':'Remember values so the next lookup is fast.',
@@ -52,6 +62,159 @@ function saveProgress(progress) {
   progress.schemaVersion = 2;
   localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
   localStorage.setItem(LEGACY_PROGRESS_KEY, JSON.stringify(progress));
+  queueCloudSync();
+}
+function accountStatus(message, kind = '') {
+  const node = $('account-status');
+  if (!node) return;
+  node.textContent = message;
+  node.dataset.kind = kind;
+}
+function snapshotLocal() {
+  const drafts = {};
+  for (const challenge of challenges) for (const language of ['python','javascript']) {
+    const value = localStorage.getItem(draftKeyFor(challenge.slug, language));
+    if (value !== null) drafts[`${challenge.slug}:${language}`] = {value, updatedAt:localStorage.getItem(`patternlab:draft-time:${challenge.slug}:${language}`) || null};
+  }
+  return {version:1, progress:readProgress(), drafts};
+}
+function mergeProgress(local, remote) {
+  const attempts = new Map();
+  for (const item of [...(remote?.attempts || []), ...(local?.attempts || [])]) {
+    const key = `${item.timestamp}|${item.slug}|${item.passed}|${item.total}`;
+    attempts.set(key, item);
+  }
+  const mergedAttempts = [...attempts.values()].sort((a,b) => String(a.timestamp).localeCompare(String(b.timestamp))).slice(-500);
+  const categories = {};
+  for (const item of mergedAttempts) {
+    const category = item.category || 'Other';
+    categories[category] ||= {attempts:0,accepted:0};
+    categories[category].attempts += 1;
+    categories[category].accepted += Number(Boolean(item.accepted));
+  }
+  const activityMap = new Map();
+  for (const item of [...(remote?.activity || []), ...(local?.activity || [])]) activityMap.set(`${item.timestamp}|${item.type}|${item.slug}|${item.detail}`, item);
+  const challengeStates = {...(remote?.challengeStates || {})};
+  for (const [slug, item] of Object.entries(local?.challengeStates || {})) {
+    const prev = challengeStates[slug] || {};
+    challengeStates[slug] = {...prev, ...item, hintLevel:Math.max(prev.hintLevel || 0,item.hintLevel || 0), editSessions:Math.max(prev.editSessions || 0,item.editSessions || 0), reflection:item.reflectionAt && (!prev.reflectionAt || item.reflectionAt > prev.reflectionAt) ? item.reflection : (prev.reflection || item.reflection || ''), reflectionAt:[prev.reflectionAt,item.reflectionAt].filter(Boolean).sort().at(-1) || null};
+  }
+  return {...freshProgress(), attempts:mergedAttempts, categories, challengeStates, activity:[...activityMap.values()].sort((a,b) => String(a.timestamp).localeCompare(String(b.timestamp))).slice(-120)};
+}
+async function syncCloudNow() {
+  if (!cloudClient || !cloudUser || applyingCloudSnapshot) return;
+  const status = $('cloud-sync-state');
+  if (status) status.textContent = 'Saving progress…';
+  const {error} = await cloudClient.from(CLOUD_TABLE).upsert({user_id:cloudUser.id, snapshot:snapshotLocal(), updated_at:new Date().toISOString()}, {onConflict:'user_id'});
+  if (status) status.textContent = error ? `Sync issue: ${error.message}` : 'Synced just now · drafts and study trail are backed up';
+  if (error) console.warn('PatternLab cloud sync:', error.message);
+}
+function queueCloudSync() {
+  if (!cloudUser || applyingCloudSnapshot) return;
+  clearTimeout(cloudSyncTimer);
+  cloudSyncTimer = setTimeout(() => syncCloudNow(), 900);
+}
+async function restoreCloudUser(user) {
+  cloudUser = user || null;
+  const label = $('account-label'), avatar = $('account-avatar'), signedCard = $('signed-in-card'), form = $('account-form');
+  if (!user) {
+    label.textContent = 'Sign in / Create account'; avatar.textContent = 'PD';
+    signedCard.hidden = true; form.hidden = false;
+    const memoryStatus = $('memory-status');
+    if (memoryStatus) memoryStatus.textContent = 'Your drafts and study trail stay in this browser until you connect an account.';
+    document.querySelectorAll('.library-foot').forEach(node => { node.textContent = 'Progress saves on this device'; });
+    accountStatus(cloudClient ? 'Sign in or create an account to back up progress across devices.' : 'Cloud accounts need a Supabase project connection before sign-up can work. Your progress is still saved on this device.');
+    return;
+  }
+  const email = user.email || 'Signed-in learner';
+  label.textContent = email.split('@')[0]; avatar.textContent = (user.user_metadata?.display_name || email).slice(0,2).toUpperCase();
+  $('signed-in-email').textContent = email;
+  signedCard.hidden = false; form.hidden = true;
+  accountStatus('Account connected. Loading your saved study trail…');
+  $('cloud-sync-state').textContent = 'Loading your progress…';
+  const {data, error} = await cloudClient.from(CLOUD_TABLE).select('snapshot').eq('user_id',user.id).maybeSingle();
+  if (error) { $('cloud-sync-state').textContent = `Could not load progress: ${error.message}`; accountStatus('Account signed in, but the progress table is not ready. Check the setup instructions.', 'error'); return; }
+  const owner = localStorage.getItem(CLOUD_OWNER_KEY);
+  const isSameOwner = owner === user.id;
+  const local = isSameOwner || !owner ? snapshotLocal() : {progress:freshProgress(),drafts:{}};
+  const remote = data?.snapshot;
+  const merged = remote ? mergeProgress(local.progress, remote.progress) : local.progress;
+  applyingCloudSnapshot = true;
+  try {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(merged));
+    localStorage.setItem(LEGACY_PROGRESS_KEY, JSON.stringify(merged));
+    if (owner && !isSameOwner) for (const challenge of challenges) for (const language of ['python','javascript']) localStorage.removeItem(draftKeyFor(challenge.slug,language));
+    if (remote?.drafts) for (const [key,value] of Object.entries(remote.drafts)) {
+      const [slug,language] = key.split(':');
+      if (challenges.some(item => item.slug === slug) && ['python','javascript'].includes(language)) {
+        const localDraft = local.drafts?.[key];
+        const localValue = typeof localDraft === 'object' ? localDraft.value : localDraft;
+        const remoteValue = typeof value === 'object' ? value.value : value;
+        const localTime = typeof localDraft === 'object' ? localDraft.updatedAt : null;
+        const remoteTime = typeof value === 'object' ? value.updatedAt : null;
+        const useLocal = localValue !== undefined && (!remoteValue || !remoteTime || (localTime && localTime >= remoteTime));
+        const chosen = useLocal ? localValue : remoteValue;
+        if (chosen != null) localStorage.setItem(draftKeyFor(slug,language),chosen);
+        const chosenTime = useLocal ? localTime : remoteTime;
+        if (chosenTime) localStorage.setItem(`patternlab:draft-time:${slug}:${language}`,chosenTime);
+      }
+    }
+    localStorage.setItem(CLOUD_OWNER_KEY,user.id);
+  } finally { applyingCloudSnapshot = false; }
+  renderProgress(merged); renderChallenges(); renderActivity(merged); renderHome();
+  if (state.challenge) selectChallenge(state.challenge.slug);
+  $('cloud-sync-state').textContent = 'Synced · drafts and study trail are backed up';
+  const memoryStatus = $('memory-status');
+  if (memoryStatus) memoryStatus.textContent = 'Your drafts and study trail are synced to your account.';
+  document.querySelectorAll('.library-foot').forEach(node => { node.textContent = 'Progress synced to your account'; });
+  accountStatus('Your progress is linked to this account and will follow you to another device.', 'success');
+  queueCloudSync();
+}
+function setAuthMode(mode) {
+  cloudAuthMode = mode;
+  document.querySelectorAll('[data-auth-mode]').forEach(button => button.classList.toggle('active',button.dataset.authMode === mode));
+  $('account-title').textContent = mode === 'signup' ? 'Keep your progress with you.' : 'Welcome back.';
+  $('account-submit').textContent = mode === 'signup' ? 'Create account' : 'Sign in';
+  $('display-name-row').hidden = mode !== 'signup';
+  $('account-password').autocomplete = mode === 'signup' ? 'new-password' : 'current-password';
+  $('account-password').minLength = mode === 'signup' ? 8 : 1;
+}
+function initAccountUI() {
+  const dialog = $('account-dialog');
+  $('account-open').addEventListener('click', () => dialog.showModal());
+  document.querySelectorAll('[data-auth-mode]').forEach(button => button.addEventListener('click', () => setAuthMode(button.dataset.authMode)));
+  $('account-signout').addEventListener('click', async () => { const {error} = await cloudClient.auth.signOut(); if (error) accountStatus(error.message,'error'); else {cloudUser=null; await restoreCloudUser(null);} });
+  const config = window.PATTERNLAB_SUPABASE_CONFIG || {};
+  const safeCloudConfig = typeof config.url === 'string' && config.url.startsWith('https://') && typeof config.publishableKey === 'string' && config.publishableKey.startsWith('sb_publishable_');
+  if (safeCloudConfig && window.supabase?.createClient) {
+    try {
+      cloudClient = window.supabase.createClient(config.url,config.publishableKey);
+      $('account-form').addEventListener('submit', async event => {
+        event.preventDefault();
+        const email = $('account-email').value.trim(), password = $('account-password').value;
+        $('account-submit').disabled = true; accountStatus(cloudAuthMode === 'signup' ? 'Creating your account…' : 'Signing in…');
+        try {
+          if (cloudAuthMode === 'signup') {
+            const {data,error} = await cloudClient.auth.signUp({email,password,options:{data:{display_name:$('account-name').value.trim()},emailRedirectTo:`${location.origin}${location.pathname}`}});
+            if (error) throw error;
+            if (data.session) await restoreCloudUser(data.user);
+            else accountStatus('Check your email for the confirmation link, then come back here to sign in.','success');
+          } else {
+            const {data,error} = await cloudClient.auth.signInWithPassword({email,password});
+            if (error) throw error;
+            await restoreCloudUser(data.user);
+          }
+        } catch (error) { accountStatus(error.message || 'Could not connect to your account.','error'); }
+        finally { $('account-submit').disabled = false; }
+      });
+      cloudClient.auth.onAuthStateChange((_event,session) => setTimeout(() => restoreCloudUser(session?.user || null),0));
+      cloudClient.auth.getSession().then(({data}) => restoreCloudUser(data.session?.user || null)).catch(error => accountStatus(error.message,'error'));
+      accountStatus('Cloud account service is ready. Create an account or sign in.','success');
+    } catch (error) { accountStatus(`Cloud setup error: ${error.message}`,'error'); }
+  } else if (config.url || config.publishableKey) {
+    accountStatus('Cloud setup needs an HTTPS Supabase URL and a browser-safe sb_publishable_ key. Do not use a secret or service-role key.','error');
+  }
+  setAuthMode('signup');
 }
 function challengeMemory(progress, slug) {
   progress.challengeStates ||= {};
@@ -127,7 +290,7 @@ function selectChallenge(slug) {
   if (!challenge) return;
   const isNew = state.challenge?.slug !== slug;
   state.challenge = challenge;
-  state.draftKey = `patternlab:draft:${slug}`;
+  state.draftKey = draftKeyFor(slug, state.language);
   const progress = readProgress();
   const memory = challengeMemory(progress, slug);
   memory.lastOpened = new Date().toISOString();
@@ -143,11 +306,19 @@ function selectChallenge(slug) {
   const source = $('source-link');
   source.href = challenge.source_url;
   source.hidden = false;
-  $('file-name').textContent = `${challenge.slug}.py`;
+  $('file-name').textContent = `${challenge.slug}.${state.language === 'python' ? 'py' : state.language === 'javascript' ? 'js' : state.language === 'typescript' ? 'ts' : state.language}`;
   $('sample-input').textContent = JSON.stringify(challenge.cases[0].input);
   $('sample-output').textContent = JSON.stringify(challenge.cases[0].expected);
   $('editor-hint').textContent = `Runs ${challenge.test_count} checks: listed examples plus fresh generated inputs.`;
-  $('code-editor').value = localStorage.getItem(state.draftKey) ?? `def solve(data):\n    # TODO: implement ${challenge.title.toLowerCase()}\n    pass\n`;
+  $('code-editor').value = localStorage.getItem(state.draftKey) ?? starterFor(state.language, challenge);
+  const supportedHere = localLanguages.has(state.language);
+  $('language-callout').hidden = supportedHere;
+  $('language-redirect').href = challenge.source_url;
+  $('code-editor').readOnly = !supportedHere;
+  $('reset-code').disabled = !supportedHere;
+  $('run-code').disabled = !supportedHere;
+  $('editor-hint').textContent = supportedHere ? `${state.language === 'python' ? 'Python' : 'JavaScript'} runs in an isolated browser worker. Your code is not sent to the grading server.` : `Use LeetCode to run ${state.language === 'cpp' ? 'C++' : state.language === 'java' ? 'Java' : 'TypeScript'} for this problem.`;
+  if (!supportedHere) setRuntimeStatus('OPEN LEETCODE', false);
   $('reflection-editor').value = memory.reflection || '';
   updateLineNumbers();
   resetTimer();
@@ -525,17 +696,21 @@ function terminateWorker(message) {
     state.activeRun.reject(new Error(message));
     state.activeRun = null;
   }
-  setRuntimeStatus('RESTARTING PYTHON');
+  setRuntimeStatus(`RESTARTING ${state.workerLanguage?.toUpperCase() || 'WORKER'}`);
 }
 function getWorker() {
   if (!state.worker) {
-    setRuntimeStatus('STARTING PYTHON');
-    state.worker = new Worker(new URL('./python-worker.mjs', import.meta.url), {type:'module'});
+    if (!localLanguages.has(state.language)) throw new Error('Choose Python or JavaScript for local checks, or open this problem on LeetCode.');
+    setRuntimeStatus(`STARTING ${state.language.toUpperCase()}`);
+    state.workerLanguage = state.language;
+    state.worker = state.language === 'javascript'
+      ? new Worker(new URL('./javascript-worker.js', import.meta.url))
+      : new Worker(new URL('./python-worker.mjs', import.meta.url), {type:'module'});
     state.workerReady = new Promise((resolve, reject) => {
       const worker = state.worker;
       worker.onmessage = ({data}) => {
-        if (data.ready) { setRuntimeStatus('PYTHON READY', true); resolve(); return; }
-        if (data.ready_error) { setRuntimeStatus('PYTHON ERROR'); reject(new Error(data.ready_error)); return; }
+        if (data.ready) { setRuntimeStatus(`${state.workerLanguage.toUpperCase()} READY`, true); resolve(); return; }
+        if (data.ready_error) { setRuntimeStatus(`${state.workerLanguage?.toUpperCase() || 'CODE'} ERROR`); reject(new Error(data.ready_error)); return; }
         if (state.activeRun && data.runId === state.activeRun.runId) {
           clearTimeout(state.activeRun.timeout);
           const current = state.activeRun;
@@ -545,7 +720,7 @@ function getWorker() {
         }
       };
       worker.onerror = (event) => {
-        setRuntimeStatus('PYTHON ERROR');
+        setRuntimeStatus(`${state.workerLanguage?.toUpperCase() || 'CODE'} ERROR`);
         if (state.activeRun) {
           clearTimeout(state.activeRun.timeout);
           state.activeRun.reject(new Error(event.message || 'Python worker failed to load.'));
@@ -563,8 +738,8 @@ function runOne(code, testCase, index) {
     const timeout = setTimeout(() => {
       if (state.activeRun?.runId !== runId) return;
       state.activeRun = null;
-      terminateWorker('Timed out after 1.5 seconds; Python worker was reset.');
-      reject(new Error('Timed out after 1.5 seconds; Python worker was reset.'));
+      terminateWorker('Timed out after 1.5 seconds; the code worker was reset.');
+      reject(new Error('Timed out after 1.5 seconds; the code worker was reset.'));
     }, 1500);
     state.activeRun = {runId, timeout, resolve, reject};
     state.worker.postMessage({runId, code, testCase, index});
@@ -607,15 +782,16 @@ async function runSolution() {
     recordAttempt(state.challenge.slug, state.challenge.category, summary.passed, results.length, started);
     if (summary.accepted) toast('Nice — every listed and generated case passed.');
   } catch (error) {
-    clearResults('Python could not start');
+    clearResults(`${state.language === 'python' ? 'Python' : 'JavaScript'} could not start`);
     $('results-list').innerHTML = `<div class="empty-result"><span class="empty-check">!</span><span>${escapeHtml(error.message)}</span></div>`;
-    toast(error.message || 'Python could not start. Check your connection and retry.');
+    toast(error.message || 'The code runtime could not start. Check your connection and retry.');
   } finally {
     button.disabled = false;
     button.querySelector('span').textContent = 'Run checks';
   }
 }
 async function init() {
+  initAccountUI();
   const pageView = ({'practice.html':'practice','patterns.html':'patterns','progress.html':'progress'})[location.pathname.split('/').pop()] || 'home';
   renderFilters();
   renderChallenges();
@@ -626,8 +802,21 @@ async function init() {
     const slug = event.currentTarget.dataset.resumeSlug || challenges[0].slug;
     location.href = `./practice.html?challenge=${encodeURIComponent(slug)}`;
   });
+  $('language-select').value = localLanguages.has(state.language) ? state.language : 'python';
+  $('language-select').addEventListener('change', event => {
+    const next = event.target.value;
+    if (!['python','javascript','cpp','java','typescript'].includes(next)) return;
+    if (state.worker && state.workerLanguage !== next) terminateWorker('Language changed; runtime restarted.');
+    state.language = next;
+    localStorage.setItem('patternlab:language', next);
+    if (state.challenge) selectChallenge(state.challenge.slug);
+    if (next === 'python' || next === 'javascript') {
+      setRuntimeStatus(`${next.toUpperCase()} STARTING`, false);
+      getWorker().then(() => {}).catch(error => toast(error.message));
+    }
+  });
   $('challenge-search').addEventListener('input', (event) => { state.search = event.target.value.trim().toLowerCase(); renderChallenges(); });
-  $('code-editor').addEventListener('input', () => { updateLineNumbers(); if (state.draftKey) { try { localStorage.setItem(state.draftKey, $('code-editor').value); } catch {} } });
+  $('code-editor').addEventListener('input', () => { updateLineNumbers(); if (state.draftKey) { try { localStorage.setItem(state.draftKey, $('code-editor').value); if (state.challenge) localStorage.setItem(`patternlab:draft-time:${state.challenge.slug}:${state.language}`,new Date().toISOString()); queueCloudSync(); } catch {} } });
   $('code-editor').addEventListener('input', () => {
     if (!state.challenge) return;
     renderTutor();
@@ -673,9 +862,10 @@ async function init() {
   $('export-memory').addEventListener('click', exportMemory);
   $('import-memory').addEventListener('change', event => { if (event.target.files?.[0]) importMemory(event.target.files[0]); event.target.value = ''; });
   $('reset-code').addEventListener('click', () => {
-    if (!state.challenge) return;
-    $('code-editor').value = `def solve(data):\n    # TODO: implement ${state.challenge.title.toLowerCase()}\n    pass\n`;
+    if (!state.challenge || !localLanguages.has(state.language)) return;
+    $('code-editor').value = starterFor(state.language, state.challenge);
     if (state.draftKey) localStorage.removeItem(state.draftKey);
+    if (state.challenge) localStorage.removeItem(`patternlab:draft-time:${state.challenge.slug}:${state.language}`);
     updateLineNumbers();
     renderTutor();
     toast('Starter code restored.');
@@ -689,14 +879,19 @@ async function init() {
   renderActivity();
   setView(pageView);
   if (pageView !== 'practice') return;
+  if (!localLanguages.has(state.language)) {
+    state.language = 'python';
+    $('language-select').value = 'python';
+    selectChallenge(initialChallenge);
+  }
   try {
     await getWorker();
     $('results-title').textContent = 'Ready when you are';
-    $('results-list').innerHTML = '<div class="empty-result"><span class="empty-check">✓</span><span>Python is ready. Run your solution to check it.</span></div>';
+    $('results-list').innerHTML = `<div class="empty-result"><span class="empty-check">✓</span><span>${state.language === 'python' ? 'Python' : 'JavaScript'} is ready. Run your solution to check it.</span></div>`;
   } catch (error) {
     setRuntimeStatus('LOAD FAILED');
-    $('results-title').textContent = 'Python could not start';
-    $('results-list').innerHTML = `<div class="empty-result"><span class="empty-check">!</span><span>Check your internet connection and refresh to load Python.</span></div>`;
+    $('results-title').textContent = `${state.language === 'python' ? 'Python' : 'JavaScript'} could not start`;
+    $('results-list').innerHTML = `<div class="empty-result"><span class="empty-check">!</span><span>Check your connection and refresh to load the ${state.language === 'python' ? 'Python' : 'JavaScript'} runtime.</span></div>`;
   }
 }
 document.addEventListener('DOMContentLoaded', init);
