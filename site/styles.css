@@ -16,3 +16,48 @@
 @media(max-width:1000px){.topbar{gap:10px}.main-nav{gap:1px}.nav-link{padding:8px 9px}.topbar-center{font-size:10px}.pattern-catalog{grid-template-columns:1fr}}
 @media(max-width:760px){.topbar{height:auto;min-height:0;padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px 10px}.brand{order:1}.topbar-right{order:2;margin-left:auto}.main-nav{order:3;width:100%;margin:0;justify-content:space-between;border-top:1px solid #edf0eb;padding-top:7px}.nav-link{flex:1;padding:9px 5px;font-size:11px}.topbar-center{display:none}.welcome-row{padding-top:4px}.hero-actions{flex-wrap:wrap}.home-shortcuts{grid-template-columns:1fr}.shortcut-card{min-height:88px}.resume-card{align-items:flex-start;flex-wrap:wrap}.resume-copy{flex-basis:calc(100% - 58px)}.resume-card>.button{margin-left:55px}.patterns-view{padding:16px}.patterns-heading{flex-direction:column}.patterns-heading h2{font-size:20px}.pattern-catalog{grid-template-columns:1fr}.pattern-group{padding:13px}}
 @media(max-width:420px){.nav-link{font-size:10px}.hero-actions{align-items:flex-start;flex-direction:column}.resume-card>.button{margin-left:0}.resume-card{gap:10px}}
+
+/* Ambient Unsplash photo rotation, kept faint behind readable cards. */
+body{isolation:isolate;background:#e9eee8;position:relative;min-height:100vh}
+body::before,body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background-position:center;background-size:cover;opacity:0;transform:scale(1.03);animation:scenery 32s ease-in-out infinite}
+body::before{background-image:linear-gradient(135deg,rgba(237,243,236,.82),rgba(242,244,240,.91)),url("https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=2000&q=75");animation-delay:0s}
+body::after{background-image:linear-gradient(135deg,rgba(237,243,236,.82),rgba(242,244,240,.91)),url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=2000&q=75");animation-delay:16s}
+@keyframes scenery{0%,8%,50%,58%,100%{opacity:0;transform:scale(1.03)}16%,42%{opacity:.34;transform:scale(1)} }
+.topbar{background:rgba(250,251,248,.78)}
+.pattern-search{max-width:420px;margin:0 0 16px}
+.pattern-problem[hidden],.pattern-group[hidden]{display:none}
+.pattern-problem{text-decoration:none}
+.shortcut-card{text-decoration:none;color:inherit}
+.button-primary{text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.hero-secondary{text-decoration:none}
+@media(max-width:760px){
+  main{padding:26px 14px 22px;overflow:hidden}
+  .topbar{position:sticky;padding:9px 12px;gap:7px}
+  .main-nav{gap:4px;padding-top:6px}
+  .nav-link{min-width:0;padding:9px 3px;font-size:10px;text-align:center}
+  .topbar-right{gap:6px}
+  .profile-avatar{width:29px;height:29px}
+  .stats-grid{gap:8px}
+  .stat-card{min-width:0}
+  .practice-layout,.work-panel,.panel,.pattern-group{min-width:0}
+  .problem-topline{flex-wrap:wrap}
+  .editor-toolbar{padding:0 10px;gap:6px}
+  .editor-meta{gap:7px}
+  .editor-live{font-size:7px}
+  .editor-wrap{grid-template-columns:32px minmax(0,1fr)}
+  .editor-wrap textarea{min-width:0;font-size:12px}
+  .editor-footer{padding:10px;gap:9px}
+  .editor-actions{justify-content:flex-start}
+  .editor-actions .button{min-height:38px}
+  .memory-tools{width:100%}
+}
+@media(max-width:360px){
+  .brand-copy strong{font-size:14px}
+  .brand-copy small{font-size:8px}
+  .nav-link{font-size:9px}
+  .topbar{padding-inline:9px}
+  .example-row{gap:4px}
+  .example-row code{font-size:9px}
+  .editor-live{display:none}
+}
+@media(prefers-reduced-motion:reduce){body::before,body::after{animation:none;opacity:.12;transform:none}.shortcut-card,.connection-card{transition:none}}
