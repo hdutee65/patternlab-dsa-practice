@@ -14,8 +14,8 @@
   <header class="topbar">
     <a class="brand" href="./index.html" aria-label="PatternLab home"><span class="brand-mark" aria-hidden="true">P</span><span class="brand-copy"><strong>PatternLab</strong><small>DSA PRACTICE</small></span></a>
     <nav class="main-nav" aria-label="Main navigation"><a class="nav-link" href="./index.html" data-page-link="home">Home</a><a class="nav-link" href="./practice.html" data-page-link="practice">Practice</a><a class="nav-link" href="./patterns.html" data-page-link="patterns">Patterns</a><a class="nav-link" href="./progress.html" data-page-link="progress">Progress</a></nav>
-    <div class="topbar-center"><span class="live-dot"></span> PYTHON <span class="topbar-divider">/</span> RUNS IN YOUR BROWSER</div>
-    <div class="topbar-right"><span class="profile-avatar">PD</span><span class="profile-name">Philippe Dupuy</span></div>
+    <div class="topbar-center"><span class="live-dot"></span> PYTHON + JAVASCRIPT <span class="topbar-divider">/</span> BROWSER RUNNERS</div>
+    <div class="topbar-right"><button class="account-trigger" id="account-open" type="button"><span class="profile-avatar" id="account-avatar">PD</span><span class="profile-name" id="account-label">Sign in / Create account</span></button></div>
   </header>
   <aside class="file-warning" id="file-warning" hidden>You’re viewing the local Mac copy. For working Python checks, use the <a href="https://hdutee65.github.io/patternlab-dsa-practice/">live site</a>.</aside>
   <main>
@@ -31,7 +31,7 @@
     </section>
     <section class="home-dashboard" data-view-target="home">
       <article class="resume-card"><div class="resume-icon">↻</div><div class="resume-copy"><span class="section-kicker">PICK UP WHERE YOU LEFT OFF</span><h2 id="resume-title">Choose a problem to start</h2><p id="resume-detail">Your drafts, attempts, and explanations stay saved in this browser.</p></div><button class="button button-primary" id="continue-practice" type="button">Open problem <span aria-hidden="true">→</span></button></article>
-      <div class="home-shortcuts"><a class="shortcut-card" href="./practice.html"><span class="shortcut-symbol">⌨</span><strong>Write and run code</strong><small>Python runs in your browser</small><span class="shortcut-arrow">→</span></a><a class="shortcut-card" href="./patterns.html"><span class="shortcut-symbol">◈</span><strong>Learn a pattern</strong><small>Build connections across problems</small><span class="shortcut-arrow">→</span></a><a class="shortcut-card" href="./progress.html"><span class="shortcut-symbol">↗</span><strong>Review your progress</strong><small>See attempts and study notes</small><span class="shortcut-arrow">→</span></a></div>
+      <div class="home-shortcuts"><a class="shortcut-card" href="./practice.html"><span class="shortcut-symbol">⌨</span><strong>Write and run code</strong><small>Python and JavaScript run here</small><span class="shortcut-arrow">→</span></a><a class="shortcut-card" href="./patterns.html"><span class="shortcut-symbol">◈</span><strong>Learn a pattern</strong><small>Build connections across problems</small><span class="shortcut-arrow">→</span></a><a class="shortcut-card" href="./progress.html"><span class="shortcut-symbol">↗</span><strong>Review your progress</strong><small>See attempts and study notes</small><span class="shortcut-arrow">→</span></a></div>
     </section>
     <section class="practice-layout" data-view-target="practice" hidden>
       <aside class="library-panel panel">
@@ -49,10 +49,10 @@
           <div class="example-row"><div><span class="example-label">SAMPLE INPUT</span><code id="sample-input">—</code></div><div class="example-arrow" aria-hidden="true">→</div><div><span class="example-label">EXPECTED OUTPUT</span><code id="sample-output">—</code></div></div>
         </article>
         <article class="editor-panel panel">
-          <div class="editor-toolbar"><div class="file-tab"><span class="python-mark">Py</span><span id="file-name">solution.py</span></div><div class="editor-meta"><span class="editor-live" id="runtime-status"><span></span> STARTING PYTHON</span><button class="text-button" id="reset-code" type="button">Reset starter</button></div></div>
-          <label class="sr-only" for="code-editor">Python solution editor</label>
-          <div class="editor-wrap"><div class="line-numbers" id="line-numbers" aria-hidden="true">1</div><textarea id="code-editor" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" aria-describedby="editor-hint" placeholder="# Select a challenge to load its starter code"></textarea></div>
-          <div class="editor-footer"><span id="editor-hint">Python loads once in a worker; your code stays in this browser.</span><div class="editor-actions"><div class="timer" id="timer"><span class="timer-dot"></span><span id="timer-display">00:00</span></div><button class="button button-quiet" id="start-timer" type="button">Start timer</button><button class="button button-primary" id="run-code" type="button" disabled><span>Run checks</span><span aria-hidden="true">→</span></button></div></div>
+          <div class="editor-toolbar"><div class="file-tab"><span class="python-mark">Py</span><span id="file-name">solution.py</span></div><div class="editor-meta"><label class="language-select-wrap"><span class="sr-only">Solution language</span><select id="language-select" aria-label="Solution language"><option value="python">Python · run here</option><option value="javascript">JavaScript · run here</option><option value="cpp">C++ · LeetCode</option><option value="java">Java · LeetCode</option><option value="typescript">TypeScript · LeetCode</option></select></label><span class="editor-live" id="runtime-status"><span></span> STARTING PYTHON</span><button class="text-button" id="reset-code" type="button">Reset starter</button></div></div>
+          <label class="sr-only" for="code-editor">Solution editor</label>
+          <div class="language-callout" id="language-callout" hidden>For this language, use LeetCode’s compiler and official function signature. <a id="language-redirect" href="#" target="_blank" rel="noreferrer">Open this problem on LeetCode ↗</a></div><div class="editor-wrap"><div class="line-numbers" id="line-numbers" aria-hidden="true">1</div><textarea id="code-editor" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" aria-describedby="editor-hint" placeholder="# Select a challenge to load its starter code"></textarea></div>
+          <div class="editor-footer"><span id="editor-hint">Python runs privately in a browser worker. Choose a language above.</span><div class="editor-actions"><div class="timer" id="timer"><span class="timer-dot"></span><span id="timer-display">00:00</span></div><button class="button button-quiet" id="start-timer" type="button">Start timer</button><button class="button button-primary" id="run-code" type="button" disabled><span>Run checks</span><span aria-hidden="true">→</span></button></div></div>
         </article>
         <article class="tutor-panel panel" aria-labelledby="tutor-title">
           <div class="tutor-heading"><div><span class="section-kicker">YOUR STUDY PARTNER</span><h2 id="tutor-title">Think it through</h2></div><span class="tutor-badge">GUIDED PRACTICE</span></div>
@@ -85,13 +85,34 @@
       </div>
       <p class="student-footnote">Offers and eligibility can change. Confirm terms on each provider’s official page before signing up.</p>
     </section>
-    <footer class="site-footer"><span>PatternLab · Philippe Dupuy</span><span>Python executes in your browser · No account required</span></footer>
+    <footer class="site-footer"><span>PatternLab · Philippe Dupuy</span><span>Python + JavaScript run here · Account sync is optional</span></footer>
   </main>
+
+  <dialog class="account-dialog" id="account-dialog" aria-labelledby="account-title">
+    <form method="dialog" class="dialog-close-form"><button class="dialog-close" aria-label="Close account panel">×</button></form>
+    <div class="account-dialog-inner">
+      <span class="account-kicker">YOUR PATTERNLAB ACCOUNT</span><h2 id="account-title">Keep your progress with you.</h2>
+      <p class="account-intro">Sign in to sync drafts, attempts, hints, and study notes across devices.</p>
+      <div class="account-status" id="account-status" role="status">Cloud accounts are not connected yet.</div>
+      <p class="account-setup-link"><a href="./cloud-setup.html" target="_blank" rel="noreferrer">How account sync is set up ↗</a></p>
+      <div class="auth-mode-toggle" id="auth-mode-toggle"><button type="button" class="auth-mode active" data-auth-mode="signup">Create account</button><button type="button" class="auth-mode" data-auth-mode="signin">Sign in</button></div>
+      <form id="account-form" class="account-form">
+        <label id="display-name-row">Name<input id="account-name" name="name" autocomplete="name" maxlength="60" placeholder="Your name"></label>
+        <label>Email<input id="account-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
+        <label>Password<input id="account-password" name="password" type="password" autocomplete="new-password" minlength="8" required placeholder="At least 8 characters"></label>
+        <button class="button button-primary account-submit" id="account-submit" type="submit">Create account</button>
+      </form>
+      <div class="signed-in-card" id="signed-in-card" hidden><div><span class="account-kicker">SIGNED IN</span><strong id="signed-in-email"></strong><small id="cloud-sync-state">Checking cloud sync…</small></div><button class="button button-quiet" id="account-signout" type="button">Sign out</button></div>
+      <p class="account-privacy">Your account uses email confirmation. Progress is private to your account. Never enter a Supabase secret key here.</p>
+    </div>
+  </dialog>
   <div class="toast" id="toast" role="status"></div>
   <script>if(location.protocol==='file:')document.getElementById('file-warning').hidden=false;</script>
   <script src="./challenges.js"></script>
   <script src="./roadmap.js"></script>
   <script src="./tutor-guides.js"></script>
+  <script src="./supabase-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script type="module" src="./app.js"></script>
 </body>
 </html>
