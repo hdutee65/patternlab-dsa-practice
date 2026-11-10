@@ -116,9 +116,9 @@ function queueCloudSync() {
 }
 async function restoreCloudUser(user) {
   cloudUser = user || null;
-  const label = $('account-label'), avatar = $('account-avatar'), signedCard = $('signed-in-card'), form = $('account-form');
+  const label = $('account-label'), signedCard = $('signed-in-card'), form = $('account-form');
   if (!user) {
-    label.textContent = 'Sign in / Create account'; avatar.textContent = 'PD';
+    label.textContent = 'Sign in / Create account';
     signedCard.hidden = true; form.hidden = false;
     const memoryStatus = $('memory-status');
     if (memoryStatus) memoryStatus.textContent = 'Your drafts and study trail stay in this browser until you connect an account.';
@@ -127,7 +127,7 @@ async function restoreCloudUser(user) {
     return;
   }
   const email = user.email || 'Signed-in learner';
-  label.textContent = email.split('@')[0]; avatar.textContent = (user.user_metadata?.display_name || email).slice(0,2).toUpperCase();
+  label.textContent = email.split('@')[0];
   $('signed-in-email').textContent = email;
   signedCard.hidden = false; form.hidden = true;
   accountStatus('Account connected. Loading your saved study trail…');
@@ -795,9 +795,59 @@ async function runSolution() {
     button.querySelector('span').textContent = 'Run checks';
   }
 }
+function initCursorExperience(pageView) {
+  const backdrop = document.createElement('div');
+  backdrop.className = 'ambient-backdrop';
+  backdrop.setAttribute('aria-hidden', 'true');
+  for (const scene of ['alpine', 'coast', 'forest', 'desert']) {
+    const photo = document.createElement('div');
+    photo.className = 'ambient-photo';
+    photo.dataset.scene = scene;
+    backdrop.append(photo);
+  }
+  document.body.prepend(backdrop);
+
+  const timer = pageView === 'practice' ? $('timer') : null;
+  const finePointer = matchMedia('(pointer: fine)').matches;
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!finePointer || reducedMotion) return;
+  timer?.classList.add('cursor-follow-timer');
+
+  let lastX = null, lastY = null, distance = 0, activeScene = 0;
+  let nextFrame = 0, pointerX = 0, pointerY = 0;
+  const scenes = ['alpine', 'coast', 'forest', 'desert'];
+  function move(event) {
+    if (event.pointerType === 'touch') return;
+    pointerX = event.clientX;
+    pointerY = event.clientY;
+    if (lastX !== null) distance += Math.hypot(pointerX - lastX, pointerY - lastY);
+    lastX = pointerX;
+    lastY = pointerY;
+    if (distance >= 120) {
+      activeScene = (activeScene + 1) % scenes.length;
+      backdrop.dataset.activeScene = scenes[activeScene];
+      distance = 0;
+    }
+    if (nextFrame) return;
+    nextFrame = requestAnimationFrame(() => {
+      nextFrame = 0;
+      const offsetX = ((pointerX / innerWidth) - .5) * 22;
+      const offsetY = ((pointerY / innerHeight) - .5) * 18;
+      backdrop.style.setProperty('--ambient-x', `${offsetX.toFixed(1)}px`);
+      backdrop.style.setProperty('--ambient-y', `${offsetY.toFixed(1)}px`);
+      if (timer) {
+        timer.style.setProperty('--cursor-timer-x', `${Math.max(8, Math.min(pointerX + 16, innerWidth - 84))}px`);
+        timer.style.setProperty('--cursor-timer-y', `${Math.max(8, Math.min(pointerY + 16, innerHeight - 44))}px`);
+      }
+    });
+  }
+  window.addEventListener('pointermove', move, {passive: true});
+}
+
 async function init() {
   initAccountUI();
   const pageView = ({'practice.html':'practice','patterns.html':'patterns','progress.html':'progress'})[location.pathname.split('/').pop()] || 'home';
+  initCursorExperience(pageView);
   renderFilters();
   renderChallenges();
   renderProgress();
